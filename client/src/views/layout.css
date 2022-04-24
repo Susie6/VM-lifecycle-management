@@ -1,0 +1,13 @@
+.site-layout-background {
+  margin: 0;
+  height: 100%;
+  position: relative;
+}
+
+.ant-layout.ant-layout-has-sider {
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 64px;
+}

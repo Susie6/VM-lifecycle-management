@@ -1,0 +1,12 @@
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+terraform.tfvars
+terraform.tfvars.json
+test.js
+test.json
+node_modules/
+/.vscode
+package.json
+package-lock.json

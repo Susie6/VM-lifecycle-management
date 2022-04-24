@@ -1,0 +1,23 @@
+.instance-resource--overview {
+  position: absolute;
+  width: 100%;
+}
+.instance-resource {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.instance-resource--toolbar {
+  position: absolute;
+  top: 150px;
+  padding-left: 24px;
+}
+
+.instance-resource--details {
+  position: absolute;
+  top: 200px;
+  width: 100%;
+  padding-left: 24px;
+  padding-right: 24px;
+}
