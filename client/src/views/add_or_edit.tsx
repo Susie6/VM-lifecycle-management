@@ -1,13 +1,18 @@
 import React from 'react';
-import { Drawer, Form, Button, Select, Steps } from 'antd';
+import { Drawer, Steps } from 'antd';
 import { DrawerType, CloudType } from '../common/enum';
-
-const { Option } = Select;
+import { ResponseData, StaticProfileForm, HuaweiForm, AliForm, AwsForm } from '../common/interface';
+import { InstanceForm } from '../components/instance_form';
+import { ProfileForm } from '../components/profile_form';
+import { post } from '../api/request';
+import { Urls } from '../api/apis';
+import './add_or_edit.css';
 
 interface DrawerProps {
   type: DrawerType;
-  resourceType: CloudType;
+  cloudType: CloudType;
   visible: boolean;
+  onClose: () => void;
 }
 
 interface DrawerState {
@@ -24,10 +29,45 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
     }
   }
 
-  componentWillReceiveProps(prevProps: DrawerProps, nextProps: DrawerProps) {
-    if (prevProps.visible !== nextProps.visible) {
-      this.setDrawerVisible(nextProps.visible);
+  componentWillReceiveProps(nextProps: DrawerProps) {
+    this.setDrawerVisible(nextProps.visible);
+  }
+
+  submitProfileForm = (values: StaticProfileForm) => {
+    const { cloudType } = this.props;
+    const postData = {
+      resource_type: cloudType,
+      access_key: values.access_key,
+      secret_key: values.secret_key,
+      region: values.region,
     }
+    post(Urls.StaticProfile, postData).then((data) => {
+      const res = data as ResponseData;
+      if (res.code === 0) {
+        console.log(res);
+        this.setState({
+          current: 1,
+        });
+      }
+    })
+  }
+
+  submitInstanceForm = (values: HuaweiForm | AwsForm | AliForm) => {
+    const { cloudType } = this.props;
+    post(Urls.ApplyResource, { ...values, resource_type: cloudType }).then((data) => {
+      const res = data as ResponseData;
+      if (res.code === 0) {
+        console.log(res);
+        this.setState({
+          current: 0,
+        });
+        this.setDrawerVisible(false);
+      }
+    })
+  }
+
+  onCancel = () => {
+    this.setDrawerVisible(false);
   }
 
   setDrawerVisible = (visible: boolean) => {
@@ -37,16 +77,16 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
   };
 
   render() {
-    const { type, resourceType } = this.props;
+    const { type, cloudType, onClose } = this.props;
     const { current } = this.state;
     const steps = [
       {
-        title: `${resourceType}云 身份凭证确认`,
-        content: 'First-content',
+        title: `${cloudType}云 身份凭证确认`,
+        content: <ProfileForm cloudType={cloudType} onClickCancel={this.onCancel} onClickSubmit={this.submitProfileForm} />,
       },
       {
-        title: `${resourceType}云 实例信息输入`,
-        content: 'Second-content',
+        title: `${cloudType}云 实例信息输入`,
+        content: <InstanceForm cloudType={cloudType} drawerType={type} onClickCancel={this.onCancel} onClickSubmit={this.submitInstanceForm} />,
       }
     ];
     return (
@@ -54,7 +94,7 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
         <Drawer
           title={type === DrawerType.ADD ? '创建实例' : '修改实例'}
           width={720}
-          onClose={() => this.setDrawerVisible(false)}
+          onClose={onClose}
           visible={this.state.visible}
           bodyStyle={{ paddingBottom: 80 }}
         >
@@ -64,28 +104,6 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
             ))}
           </Steps>
           <div className="steps-content">{steps[current].content}</div>
-          <Form layout="vertical" hideRequiredMark>
-
-          </Form>
-          <div
-            style={{
-              position: 'absolute',
-              right: 0,
-              bottom: 0,
-              width: '100%',
-              borderTop: '1px solid #e9e9e9',
-              padding: '10px 16px',
-              background: '#fff',
-              textAlign: 'right',
-            }}
-          >
-            <Button onClick={() => this.setDrawerVisible(false)} style={{ marginRight: 8 }}>
-              Cancel
-            </Button>
-            <Button onClick={() => this.setDrawerVisible(false)} type="primary">
-              Submit
-            </Button>
-          </div>
         </Drawer>
       </div>
     );

@@ -10,9 +10,9 @@ export enum MenuSubItemType {
 }
 
 export enum InstanceStatus {
-  Running = 'Running',
-  Stopped = 'Stopped',
-  Terminated = 'Terminated',
+  Running = 'running',
+  Stopped = 'stopped',
+  Terminated = 'terminated',
 }
 
 export enum StatusBadge {
@@ -29,7 +29,8 @@ export const StatusMap = {
 
 export enum AwsRegion {
   // 待确认
-  Beijing = 'cn-beijing',
+  // Beijing = 'cn-beijing',
+  East = 'us-east-1',
 }
 
 export enum AliRegion {
@@ -57,6 +58,15 @@ export const HuaweiAvailableZone = {
   [HuaweiRegion.ShangHai2]: ['cn-east-2a', 'cn-east-2b', 'cn-east-2c', 'cn-east-2d'],
   [HuaweiRegion.ShangHai3]: ['cn-east-3a', 'cn-east-3b', 'cn-east-3c',],
   [HuaweiRegion.GuangZhou1]: ['cn-south-1a', 'cn-south-1b', 'cn-south-1c', 'cn-south-1e', 'cn-south-1f'],
+}
+
+export const AliAvailableZone = {
+  [AliRegion.BeiJing]: ['cn-north-1a', 'cn-north-1b', 'cn-north-1c'],
+  [AliRegion.ShenZhen]: ['cn-north-4a', 'cn-north-4b', 'cn-north-4c', 'cn-north-4g'],
+  [AliRegion.ShangHai]: ['cn-east-2a', 'cn-east-2b', 'cn-east-2c', 'cn-east-2d'],
+  [AliRegion.HangZhou]: ['cn-east-3a', 'cn-east-3b', 'cn-east-3c',],
+  [AliRegion.ZhangJiaKou]: ['cn-south-1a', 'cn-south-1b', 'cn-south-1c', 'cn-south-1e', 'cn-south-1f'],
+  [AliRegion.QingDao]: ['cn-south-1a'],
 }
 
 export enum AwsInstanceType {
@@ -94,4 +104,27 @@ export enum HuaweiInstanceType {
 export enum DrawerType {
   ADD = 'add',
   EDIT = 'edit',
+}
+
+export enum DiskCategory {
+  //ephemeral_ssd, cloud_efficiency, cloud_ssd, cloud_essd
+  Cloud_Efficiency = ' cloud_efficiency',
+  Ephemeral_Ssd = 'ephemeral_ssd',
+  Cloud_Ssd = ' cloud_ssd',
+  Cloud_Essd = ' cloud_essd',
+}
+
+export enum HuaweiSystemDiskType {
+  // SAS GPSSD SSD ESSD
+  SSD = 'SSD',
+  GPSSD = 'GPSSD',
+  SAS = 'SAS',
+  ESSD = 'ESSD',
+}
+
+export enum HuaweiDataDiskType {
+  // SAS GPSSD SSD
+  SSD = 'SSD',
+  GPSSD = 'GPSSD',
+  SAS = 'SAS',
 }

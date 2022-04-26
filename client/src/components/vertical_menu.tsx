@@ -38,16 +38,16 @@ export class VerticalMenu extends React.Component<VerticalMenuProps, VerticalMen
 
   }
 
-  onOpenChange = (openKeys: string[]) => {
-    const latestOpenKey = openKeys.find(key => this.state.openKeys.indexOf(key) === -1);
-    if (latestOpenKey && this.rootSubmenuKeys.indexOf(latestOpenKey) === -1) {
-      this.setState({ openKeys });
-    } else {
-      this.setState({
-        openKeys: latestOpenKey ? [latestOpenKey] : [],
-      });
-    }
-  };
+  // onOpenChange = (openKeys: string[]) => {
+  //   const latestOpenKey = openKeys.find(key => this.state.openKeys.indexOf(key) === -1);
+  //   if (latestOpenKey && this.rootSubmenuKeys.indexOf(latestOpenKey) === -1) {
+  //     this.setState({ openKeys });
+  //   } else {
+  //     this.setState({
+  //       openKeys: latestOpenKey ? [latestOpenKey] : [],
+  //     });
+  //   }
+  // };
 
   render() {
     const { SubMenu } = Menu;
@@ -56,7 +56,7 @@ export class VerticalMenu extends React.Component<VerticalMenuProps, VerticalMen
     return (
       <Menu
         onClick={handleMenuClick}
-        onOpenChange={this.onOpenChange}
+        // onOpenChange={this.onOpenChange}
         style={{ width: 256 }}
         defaultSelectedKeys={[selectedKey]}
         defaultOpenKeys={[openKey]}

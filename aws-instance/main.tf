@@ -50,8 +50,7 @@ module "aws_resources" {
 
   instance_type  = var.aws_props.instance_type[count.index]
   instance_name  = var.aws_props.instance_name[count.index]
-  cpu_core_count = var.aws_props.cpu_core_count[count.index]
-  aws_ami_id     = var.aws_props.aws_ami_id
+  ami_id     = var.aws_props.ami_id[count.index]
 
   subnet_id   = module.aws_vpc.subnet_id
   secgroup_id = module.aws_vpc.secgroup_id

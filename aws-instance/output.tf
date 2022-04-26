@@ -10,6 +10,6 @@ output "secgroup_id" {
   value = module.aws_vpc.secgroup_id
 }
 
-output "instance_ids" {
-  value = module.aws_resources.*.id
-}
+# output "instance_ids" {
+#   value = module.aws_resources.*.aws_instance.instance.id
+# }

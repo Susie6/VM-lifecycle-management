@@ -9,7 +9,9 @@ interface InstanceBoxProps {
   region: AwsRegion | AliRegion | HuaweiRegion;
   publicIp: string;
   status: InstanceStatus;
-
+  onSearchClick: () => void;
+  onDestroyClick: () => void;
+  onEditClick: () => void;
 }
 
 function getManagementBtns() {
@@ -26,7 +28,7 @@ function getManagementBtns() {
 
 export class InstanceBox extends React.Component<InstanceBoxProps> {
   render() {
-    const { instanceId, instanceName, region, publicIp, status } = this.props;
+    const { instanceId, instanceName, region, publicIp, status, onSearchClick, onDestroyClick, onEditClick } = this.props;
     return (
       <div className='instance-box'>
         <Card title={instanceName} extra={getManagementBtns()}>
@@ -41,9 +43,9 @@ export class InstanceBox extends React.Component<InstanceBoxProps> {
             </Descriptions.Item>
           </Descriptions>
           <div className='instance-box-btns'>
-            <Button type="primary" className='instance-box-btn'>销毁实例</Button>
-            <Button type="primary" className='instance-box-btn'>修改实例信息</Button>
-            <Button type="primary" className='instance-box-btn'>查看实例详情</Button>
+            <Button type="primary" className='instance-box-btn' onClick={onDestroyClick}>销毁实例</Button>
+            <Button type="primary" className='instance-box-btn' onClick={onEditClick}>修改实例信息</Button>
+            <Button type="primary" className='instance-box-btn' onClick={onSearchClick}>查看实例详情</Button>
           </div>
         </Card>
       </div>
