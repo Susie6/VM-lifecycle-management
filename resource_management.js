@@ -53,10 +53,6 @@ app.use((req, res, next) => {
   req.method === 'OPTIONS' ? res.status(204).end() : next()
 })
 
-function test() {
-  console.log("testing");
-}
-
 app.post('/staticProfile', async (request, response) => {
   const {
     resource_type,
@@ -179,11 +175,16 @@ app.post('/applyResource', async (request, response) => {
       data_disk_size: request.body.data_disk_size,
     };
   }
-  await updateResourceInfo(newData, resource_type, OPERATION_TYPE.ADD, 0);
+  const key = generateUniqueId();
+  await updateResourceInfo(newData, resource_type, OPERATION_TYPE.ADD, key);
+  console.log("finished writing")
+  // terraform apply --auto-approve -target 'module.aws_resources[\"l2iufnwg\"].aws_instance.instance'
+  const cmd = `${TERRAFORM_COMMANDS.APPLY} -target "module.${resource_type}_resources[\\"${key}\\"].${resource_type}_instance.instance"`;
+  // const cmd = TERRAFORM_COMMANDS.APPLY;
   const {
     code,
     cmd_info
-  } = await execute(TERRAFORM_COMMANDS.APPLY, cmd_path);
+  } = await execute(cmd, cmd_path);
   if (code === 0) {
     console.log(cmd_info);
     const res = {
@@ -215,25 +216,21 @@ app.post('/destroyResource', async (request, response) => {
     info
   } = await getInstanceInfo(resource_type, instance_id);
   if (search_code === 0) {
-    const instance_index = info.index;
-    //module.aws_resources[0].aws_instance.instance
-    const cmd = `${TERRAFORM_COMMANDS.DESTROY} -target module.${resource_type}_resources[${instance_index}].${resource_type}_instance.instance`;
+    // module.aws_resources[\"instance_a\"].aws_instance.instance
+    const instance_key = info.instance_key;
+    const cmd = `${TERRAFORM_COMMANDS.DESTROY} -target "module.${resource_type}_resources[\\"${instance_key}\\"].${resource_type}_instance.instance" --auto-approve`;
     const result = await execute(cmd, cmd_path);
-    await updateResourceInfo(null, resource_type, OPERATION_TYPE.DELETE, instance_index);
-    const {
-      code,
-      cmd_info
-    } = await execute(TERRAFORM_COMMANDS.APPLY, cmd_path);
-    if (code === 0) {
+    if (result.code === 0) {
       res = {
-        code,
+        code: 0,
         command_error: null,
         msg: '资源销毁成功！'
       };
       response.send(JSON.stringify(res));
+      await updateResourceInfo(null, resource_type, OPERATION_TYPE.DELETE, instance_key);
     } else {
       res = {
-        code,
+        code: 1,
         command_error: cmd_info,
         msg: '资源销毁失败，详情请查看报错信息！'
       };
@@ -241,7 +238,7 @@ app.post('/destroyResource', async (request, response) => {
     }
   } else {
     res = {
-      code,
+      code: 1,
       command_error: info,
       msg: '资源销毁失败，详情请查看报错信息！'
     };
@@ -289,16 +286,17 @@ app.post('/showSingleResource', async (request, response) => {
 app.post('/updateInstanceInfo', async (request, response) => {
   const {
     resource_type,
-    instance_index,
+    instance_key,
     modified_result
   } = request.body;
   const cmd_path = `${resource_type}-instance`;
   let res = {};
-  await updateResourceInfo(modified_result, resource_type, OPERATION_TYPE.MODIFY, instance_index);
+  await updateResourceInfo(modified_result, resource_type, OPERATION_TYPE.MODIFY, instance_key);
+  const cmd = `${TERRAFORM_COMMANDS.APPLY} -target "module.${resource_type}_resources[\\"${instance_key}\\"].${resource_type}_instance.instance"`;
   const {
     code,
     cmd_info
-  } = await execute(TERRAFORM_COMMANDS.APPLY, cmd_path);
+  } = await execute(cmd, cmd_path);
   if (code === 0) {
     res = {
       code,
@@ -327,7 +325,7 @@ app.post('/showResourceInfo', async (request, response) => {
   } = await execute(TERRAFORM_COMMANDS.SHOW_RESOURCES_INFO, cmd_path);
   if (code === 0) {
     const json_data = JSON.parse(cmd_info);
-    const instance_info = json_data.values.root_module.child_modules[0].resources;
+    const instance_info = json_data.values.root_module.child_modules.filter(item => item.address.includes(`${resource_type}_resources`)).map(item => item.resources[0]);
     const res = {
       code,
       command_error: null,
@@ -345,6 +343,58 @@ app.post('/showResourceInfo', async (request, response) => {
     response.send(JSON.stringify(res));
   }
 });
+
+app.post('/showStaticProfile', (request, response) => {
+  const {
+    resource_type
+  } = request.body;
+  const select_sql = `select resource_type,access_key,secret_key,region from UserStaticProfile where resource_type='${resource_type}';`;
+  let res = {};
+  db.query(select_sql, function (err, result) {
+    if (err) {
+      res = {
+        code: 1,
+        command_error: err.message,
+        msg: '静态资源信息查看失败，详情请查看报错信息！',
+        result: null,
+      }
+    } else {
+      res = {
+        code: 0,
+        command_error: null,
+        msg: '静态资源信息查看成功！',
+        result: result.length > 0 ? result[0] : null,
+      }
+    }
+    response.send(JSON.stringify(res));
+  })
+})
+
+app.post('/showRegion', (request, response) => {
+  const {
+    resource_type
+  } = request.body;
+  const select_sql = `select region from UserStaticProfile where resource_type='${resource_type}';`;
+  let res = {};
+  db.query(select_sql, function (err, result) {
+    if (err) {
+      res = {
+        code: 1,
+        command_error: err.message,
+        msg: '静态资源信息查看失败，详情请查看报错信息！',
+        result: null,
+      }
+    } else {
+      res = {
+        code: 0,
+        command_error: null,
+        msg: '静态资源信息查看成功！',
+        result: result.length > 0 ? result[0] : null,
+      }
+    }
+    response.send(JSON.stringify(res));
+  })
+})
 
 // 命令行执行
 function execute(cmd, working_path) {
@@ -390,50 +440,47 @@ function fromJson(fileName) {
 
 
 async function toJson(file, newData, resource_type) {
-  // resource_type: aws_props huawei_props ali_props
   // newData的数据结构：key value：修改后的值
-  const type = `${resource_type}_props`
+  const type = `${resource_type}_input`
   const data = await fromJson(file);
   Object.keys(newData).forEach(key => {
     data[type][key] = newData[key];
   });
   const json_data = JSON.stringify(data, null, "\t");
-  // const file_descriptor = fs.openSync(file); 
   fs.writeFileSync(file, json_data);
-  // fs.close(file_descriptor, function (err) {
-  //   if (err) {
-  //     console.log(err)
-  //   }
-
-  //   console.log("关闭文件")
-  // })
   console.log("写入文件")
 }
 
-async function updateResourceInfo(newData, resource_type, operation_type, index) {
-  // resource_type: aws_props huawei_props ali_props
+async function updateResourceInfo(newData, resource_type, operation_type, instance_key) {
   // newData的数据结构：key value：修改后的值
-  const type = `${resource_type}_props`
+  const type = `${resource_type}_input`
   const file_path = `${resource_type}-instance/${variable_file}`;
   const data = await fromJson(file_path);
   if (operation_type === OPERATION_TYPE.ADD) {
-    if (data[type].instance_count) data[type].instance_count += 1;
-    else data[type].instance_count = 1;
+    data[type].list_result[instance_key] = {};
     Object.keys(newData).forEach(key => {
-      if (data[type][key] !== undefined) data[type][key].push(newData[key]);
+      data[type].list_result[instance_key][key] = newData[key];
     });
   } else if (operation_type === OPERATION_TYPE.MODIFY) {
     Object.keys(newData).forEach(key => {
-      data[type][key][index] = newData[key];
+      data[type].list_result[instance_key][key] = newData[key];
     });
   } else if (operation_type === OPERATION_TYPE.DELETE) {
-    data[type].instance_count -= 1;
-    Object.keys(newData).forEach(key => {
-      data[type][key][index].splice(index, 1);
-    });
+    delete data[type].list_result[instance_key];
   }
   const json_data = JSON.stringify(data, null, "\t");
   fs.writeFileSync(file_path, json_data);
+}
+
+function generateUniqueId() {
+  const uuid = Date.now().toString(36);
+  return uuid;
+}
+
+function getInstanceKey(item) {
+  // module.aws_resources[\"instance_a\"].aws_instance.instance
+  const arr = item.split('"');
+  return arr[1];
 }
 
 async function getInstanceInfo(resource_type, instance_id) {
@@ -444,17 +491,18 @@ async function getInstanceInfo(resource_type, instance_id) {
   } = await execute(TERRAFORM_COMMANDS.SHOW_RESOURCES_INFO, cmd_path);
   if (code === 0) {
     const json_data = JSON.parse(cmd_info);
-    const instance_info = json_data.values.root_module.child_modules[0].resources;
+    const instance_info = json_data.values.root_module.child_modules.filter(item => item.address.includes(`${resource_type}_resources`)).map(item => item.resources[0]);
     let res = {
       code: 2,
       info: "该资源尚未创建！"
     };
-    instance_info.forEach((item, index) => {
+    instance_info.forEach(item => {
       if (item.values.id === instance_id) {
+        const key = getInstanceKey(item.address);
         res = {
           code,
           info: {
-            index,
+            instance_key: key,
             item
           }
         };

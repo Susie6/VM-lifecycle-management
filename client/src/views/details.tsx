@@ -1,5 +1,5 @@
 import React from 'react';
-import { Drawer, List } from 'antd';
+import { Drawer, List, message } from 'antd';
 import { CloudType } from '../common/enum';
 import { ResponseData, AwsResult } from '../common/interface';
 import { post } from '../api/request';
@@ -29,12 +29,15 @@ export class DetailsView extends React.Component<DetailsProps, DetailsState> {
       visible: false,
       InstanceInfo: null,
     }
+  }
+
+  componentDidMount() {
     this.getInstanceInfo();
   }
 
   componentWillReceiveProps(nextProps: DetailsProps) {
     this.setDrawerVisible(nextProps.visible);
-    this.getInstanceInfo();
+    nextProps.visible && this.getInstanceInfo();
   }
 
   setDrawerVisible = (visible: boolean) => {
@@ -45,14 +48,16 @@ export class DetailsView extends React.Component<DetailsProps, DetailsState> {
 
   getInstanceInfo() {
     const { cloudType, instanceId } = this.props;
-    post(Urls.ShowSingleResource, { resource_type: cloudType, instance_id: instanceId }).then((data) => {
+    post(Urls.ShowSingleResource, { resource_type: cloudType, instance_id: instanceId }).then(data => {
       const res = data as ResponseData;
       if (res.code === 0) {
         this.setState({
           InstanceInfo: res.result,
         })
+      } else {
+        message.error({ content: res.msg });
       }
-    })
+    });
   }
 
   getListData(): ListData[] {

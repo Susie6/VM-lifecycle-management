@@ -8,9 +8,9 @@ terraform {
 }
 
 provider "huaweicloud" {
-  access_key = var.huawei_props.access_key
-  secret_key = var.huawei_props.secret_key
-  region     = var.huawei_props.region
+  access_key = var.huawei_input.access_key
+  secret_key = var.huawei_input.secret_key
+  region     = var.huawei_input.region
 }
 
 module "huawei_vpc" {
@@ -18,20 +18,17 @@ module "huawei_vpc" {
 }
 
 module "huawei_resources" {
-  source            = "../modules/huawei-cloud-module"
-  count             = var.huawei_props.instance_count
-  access_key        = var.huawei_props.access_key
-  secret_key        = var.huawei_props.secret_key
-  region            = var.huawei_props.region
-  availability_zone = var.huawei_props.availability_zone
+  source   = "../modules/huawei-cloud-module"
+  for_each = var.huawei_input.list_result
 
-  instance_type    = var.huawei_props.instance_type[count.index]
-  instance_name    = var.huawei_props.instance_name[count.index]
-  system_disk_type = var.huawei_props.system_disk_type[count.index]
-  system_disk_size = var.huawei_props.system_disk_size[count.index]
-  data_disk_type   = var.huawei_props.data_disk_type[count.index]
-  data_disk_size   = var.huawei_props.data_disk_size[count.index]
-  image_name       = var.huawei_props.image_name[count.index]
+  availability_zone = each.value.availability_zone
+  instance_type     = each.value.instance_type
+  instance_name     = each.value.instance_name
+  system_disk_type  = each.value.system_disk_type
+  system_disk_size  = each.value.system_disk_size
+  data_disk_type    = each.value.data_disk_type
+  data_disk_size    = each.value.data_disk_size
+  image_name        = each.value.image_name
 
   subnet_id   = module.huawei_vpc.subnet_id
   secgroup_id = module.huawei_vpc.secgroup_id

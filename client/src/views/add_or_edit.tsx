@@ -1,5 +1,5 @@
 import React from 'react';
-import { Drawer, Steps } from 'antd';
+import { Drawer, Steps, message } from 'antd';
 import { DrawerType, CloudType } from '../common/enum';
 import { ResponseData, StaticProfileForm, HuaweiForm, AliForm, AwsForm } from '../common/interface';
 import { InstanceForm } from '../components/instance_form';
@@ -12,6 +12,8 @@ interface DrawerProps {
   type: DrawerType;
   cloudType: CloudType;
   visible: boolean;
+  instanceId?: string | null;
+  instanceKey?: string | null;
   onClose: () => void;
 }
 
@@ -41,29 +43,55 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
       secret_key: values.secret_key,
       region: values.region,
     }
+    const msgKey = 'static';
+    message.loading({ content: '正在执行初始化...', key: msgKey, duration: 10 });
     post(Urls.StaticProfile, postData).then((data) => {
       const res = data as ResponseData;
       if (res.code === 0) {
-        console.log(res);
         this.setState({
           current: 1,
         });
+        message.success({ content: res.msg, key: msgKey });
+      } else {
+        message.error({ content: res.msg, key: msgKey });
       }
     })
   }
 
   submitInstanceForm = (values: HuaweiForm | AwsForm | AliForm) => {
-    const { cloudType } = this.props;
-    post(Urls.ApplyResource, { ...values, resource_type: cloudType }).then((data) => {
-      const res = data as ResponseData;
-      if (res.code === 0) {
-        console.log(res);
-        this.setState({
-          current: 0,
-        });
-        this.setDrawerVisible(false);
-      }
-    })
+    const { cloudType, type, instanceKey } = this.props;
+    if (type === DrawerType.ADD) {
+      const msgKey = 'create';
+      message.loading({ content: '正在创建云资源...', key: msgKey, duration: 20 });
+      post(Urls.ApplyResource, { ...values, resource_type: cloudType }).then((data) => {
+        const res = data as ResponseData;
+        if (res.code === 0) {
+          console.log(res);
+          this.setState({
+            current: 0,
+          });
+          message.success({ content: res.msg, key: msgKey });
+          this.setDrawerVisible(false);
+        } else {
+          message.error({ content: res.msg, key: msgKey });
+        }
+      })
+    } else {
+      const msgKey = 'update';
+      message.loading({ content: '正在升级云资源...', key: msgKey, duration: 20 });
+      post(Urls.UpdateInstanceInfo, { modified_result: values, resource_type: cloudType, instance_key: instanceKey }).then((data) => {
+        const res = data as ResponseData;
+        if (res.code === 0) {
+          this.setState({
+            current: 0,
+          });
+          message.success({ content: res.msg, key: msgKey });
+          this.setDrawerVisible(false);
+        } else {
+          message.error({ content: res.msg, key: msgKey });
+        }
+      })
+    }
   }
 
   onCancel = () => {
@@ -77,16 +105,16 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
   };
 
   render() {
-    const { type, cloudType, onClose } = this.props;
+    const { type, cloudType, instanceId, onClose } = this.props;
     const { current } = this.state;
     const steps = [
       {
-        title: `${cloudType}云 身份凭证确认`,
+        title: `${cloudType} 身份凭证确认`,
         content: <ProfileForm cloudType={cloudType} onClickCancel={this.onCancel} onClickSubmit={this.submitProfileForm} />,
       },
       {
-        title: `${cloudType}云 实例信息输入`,
-        content: <InstanceForm cloudType={cloudType} drawerType={type} onClickCancel={this.onCancel} onClickSubmit={this.submitInstanceForm} />,
+        title: `${cloudType} 实例信息输入`,
+        content: <InstanceForm cloudType={cloudType} drawerType={type} onClickCancel={this.onCancel} onClickSubmit={this.submitInstanceForm} instanceId={instanceId} />,
       }
     ];
     return (

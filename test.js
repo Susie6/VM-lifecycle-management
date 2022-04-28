@@ -4,6 +4,42 @@ const {
 } = require('child_process');
 const fs = require('fs');
 
+function fromJson(fileName) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(fileName, (error, data) => {
+      if (error) return reject(error);
+      const parse_data = JSON.parse(data.toString())
+      return resolve(parse_data);
+    });
+  });
+};
+
+async function toJson(file, newData) {
+  // resource_type: aws_props huawei_props ali_props
+  // newData的数据结构：key value：修改后的值
+  // const type = `${resource_type}_props`
+  const data = await fromJson(file);
+  console.log("before: ", data.aws_input.list_result);
+  delete data.aws_input.list_result["instance_a"]
+  console.log("after: ", data.aws_input.list_result)
+  // Object.keys(newData).forEach(key => {
+  //   data["aws_input"][key] = newData[key];
+  // });
+  const json_data = JSON.stringify(data, null, "\t");
+  fs.writeFileSync(file, json_data);
+  // console.log("写入文件")
+}
+
+toJson('test.json', {
+  secret_key: "15gsgdsf"
+});
+
+
+
+
+
+
+
 function myTest(cmd) {
   return new Promise(function (resolve, reject) {
     exec(cmd, {
@@ -13,7 +49,10 @@ function myTest(cmd) {
       const code = 1;
       if (err) {
         // console.log("aws: ", err);
-        resolve({code, err});
+        resolve({
+          code,
+          err
+        });
       } else if (stderr.lenght > 0) {
         reject(new Error(stderr.toString()));
       } else {
@@ -35,7 +74,7 @@ async function tryTest() {
 // tryTest().then(data=> {
 //   console.log("async: ", data);
 // });
-async function aaa(){
+async function aaa() {
   const d = await tryTest();
   console.log("aaaaa: ", d);
 }
@@ -493,5 +532,3 @@ const info = {
     }
   }
 };
-
-console.log(JSON.parse(info));

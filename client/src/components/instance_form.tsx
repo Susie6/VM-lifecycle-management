@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Button, Input, Select } from 'antd';
+import { Form, Button, Input, Select, message } from 'antd';
 import {
   DrawerType,
   CloudType,
@@ -17,10 +17,14 @@ import {
 } from '../common/enum';
 import { HuaweiForm, AliForm, AwsForm } from '../common/interface';
 import { FormInstance } from 'antd/lib/form';
+import { ResponseData, AwsResult } from '../common/interface';
+import { post } from '../api/request';
+import { Urls } from '../api/apis';
 
 interface InstanceFormProps {
   cloudType: CloudType;
   drawerType: DrawerType;
+  instanceId?: string | null;
   onClickSubmit: (values: HuaweiForm | AwsForm | AliForm) => void;
   onClickCancel: () => void;
 }
@@ -33,11 +37,46 @@ export class InstanceForm extends React.Component<InstanceFormProps> {
     this.region = AliRegion.BeiJing; // 向后端查询
   }
 
-  onFill = () => {
-    if (this.formRef.current) {
-      this.formRef.current.setFieldsValue({
-        // url: 'https://taobao.com/',
+  componentDidMount() {
+    const { drawerType } = this.props;
+    if (drawerType === DrawerType.EDIT) {
+      this.setInstanceInfo();
+    }
+  }
+
+  setInstanceInfo() {
+    const { cloudType, instanceId } = this.props;
+    if (instanceId) {
+      post(Urls.ShowSingleResource, { resource_type: cloudType, instance_id: instanceId }).then((data) => {
+        const res = data as ResponseData;
+        if (res.code === 0 && res.result !== null) {
+          switch (cloudType) {
+            case CloudType.AWS:
+              const result = res.result as AwsResult; // 根据 cloud type
+              const values = {
+                instance_type: result.item.values.instance_type,
+                instance_name: result.item.values.tags.Name,
+                ami_id: result.item.values.ami,
+              }
+              this.onFill(values);
+              break;
+            case CloudType.ALI:
+              //..
+              break;
+            case CloudType.HUAWEI:
+              //..
+              break;
+          }
+        } else if (res.code !== 0) {
+          message.error({ content: res.msg });
+        }
       });
+    }
+  }
+
+  onFill = (values: HuaweiForm | AwsForm | AliForm) => {
+    if (this.formRef.current) {
+      this.formRef.current.setFieldsValue(values);
     }
   };
 
@@ -81,7 +120,7 @@ export class InstanceForm extends React.Component<InstanceFormProps> {
   }
 
   renderAliForm() {
-    const { onClickSubmit, onClickCancel } = this.props;
+    const { onClickCancel } = this.props;
     return (
       <div>
         <Form
@@ -210,7 +249,7 @@ export class InstanceForm extends React.Component<InstanceFormProps> {
     );
   }
   renderAwsForm() {
-    const { onClickSubmit, onClickCancel } = this.props;
+    const { onClickCancel } = this.props;
     return (
       <div>
         <Form
@@ -261,7 +300,7 @@ export class InstanceForm extends React.Component<InstanceFormProps> {
     );
   }
   renderHuaweiForm() {
-    const { onClickSubmit, onClickCancel } = this.props;
+    const { onClickCancel } = this.props;
     return (
       <div>
         <Form

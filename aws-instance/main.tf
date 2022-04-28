@@ -8,9 +8,9 @@ terraform {
 }
 
 provider "aws" {
-  region     = var.aws_props.region
-  access_key = var.aws_props.access_key
-  secret_key = var.aws_props.secret_key
+  region     = var.aws_input.region
+  access_key = var.aws_input.access_key
+  secret_key = var.aws_input.secret_key
 
   endpoints {
     apigateway     = "http://localhost:4566"
@@ -45,12 +45,12 @@ module "aws_vpc" {
 }
 
 module "aws_resources" {
-  source = "../modules/aws-cloud-module"
-  count  = var.aws_props.instance_count
+  source   = "../modules/aws-cloud-module"
+  for_each = var.aws_input.list_result
 
-  instance_type  = var.aws_props.instance_type[count.index]
-  instance_name  = var.aws_props.instance_name[count.index]
-  ami_id     = var.aws_props.ami_id[count.index]
+  instance_type  = each.value.instance_type
+  instance_name  = each.value.instance_name
+  ami_id         = each.value.ami_id
 
   subnet_id   = module.aws_vpc.subnet_id
   secgroup_id = module.aws_vpc.secgroup_id

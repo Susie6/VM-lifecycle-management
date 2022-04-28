@@ -1,17 +1,31 @@
 import React from 'react';
-import { Card, Descriptions, Badge, Button, Divider } from 'antd';
-import { InstanceStatus, StatusMap, AwsRegion, AliRegion, HuaweiRegion } from '../common/enum';
+import { Card, Descriptions, Badge, Button, Divider, message } from 'antd';
+import { InstanceStatus, StatusMap, AwsRegion, AliRegion, HuaweiRegion, AwsInstanceType, AliInstanceType, HuaweiInstanceType, CloudType } from '../common/enum';
+import { ResponseData } from '../common/interface';
 import './instance_box.css';
+import { DetailsView } from '../views/details';
+import { post } from '../api/request';
+import { Urls } from '../api/apis';
+import { Dialog } from './dialog';
 
-interface InstanceBoxProps {
+export interface InstanceBoxInfo {
+  instanceKey: string;
   instanceId: string;
   instanceName: string;
-  region: AwsRegion | AliRegion | HuaweiRegion;
+  region: AwsRegion | AliRegion | HuaweiRegion | null;
   publicIp: string;
   status: InstanceStatus;
-  onSearchClick: () => void;
-  onDestroyClick: () => void;
-  onEditClick: () => void;
+  instanceType: AwsInstanceType | AliInstanceType | HuaweiInstanceType;
+  image: string;
+}
+interface InstanceBoxProps extends InstanceBoxInfo {
+  cloudType: CloudType;
+  onEditClick: (id: string, instanceKey: string) => void;
+}
+
+interface InstanceBoxState {
+  detailsPageVisible: boolean;
+  dialogVisible: boolean;
 }
 
 function getManagementBtns() {
@@ -26,29 +40,80 @@ function getManagementBtns() {
   );
 }
 
-export class InstanceBox extends React.Component<InstanceBoxProps> {
+export class InstanceBox extends React.Component<InstanceBoxProps, InstanceBoxState> {
+
+  constructor(props: InstanceBoxProps) {
+    super(props);
+    this.state = {
+      detailsPageVisible: false,
+      dialogVisible: false,
+    }
+  }
+
+  closeDetailsDrawer = () => {
+    this.setState({
+      detailsPageVisible: false,
+    })
+  }
+
+  onSearchClick = () => {
+    this.setState({
+      detailsPageVisible: true,
+    })
+  }
+
+  setDialogVisible(visible: boolean) {
+    this.setState({
+      dialogVisible: visible,
+    })
+  }
+
+  onDestroyClick = () => {
+    this.setDialogVisible(true);
+  }
+
+  destroyInstance = () => {
+    const { instanceId, cloudType } = this.props;
+    const msgKey = 'destroy';
+    message.loading({ content: '正在销毁资源...', key: msgKey, duration: 10 });
+    post(Urls.DestroyResource, { resource_type: cloudType, instance_id: instanceId }).then(data => {
+      const res = data as ResponseData;
+      if (res.code === 0) {
+        message.success({ content: res.msg, key: msgKey});
+        this.setDialogVisible(false);
+      } else {
+        message.error({ content: res.msg, key: msgKey});
+      }
+    });
+  }
+
   render() {
-    const { instanceId, instanceName, region, publicIp, status, onSearchClick, onDestroyClick, onEditClick } = this.props;
+    const { instanceId, instanceName, region, publicIp, status, instanceType, image, cloudType, instanceKey, onEditClick } = this.props;
+    const { detailsPageVisible, dialogVisible } = this.state;
     return (
-      <div className='instance-box'>
-        <Card title={instanceName} extra={getManagementBtns()}>
-          <Descriptions size='small' bordered>
-            <Descriptions.Item label='实例ID'>{instanceId}</Descriptions.Item>
-            <Descriptions.Item label='地域'>{region}</Descriptions.Item>
-            <Descriptions.Item label='公网IP'>{publicIp}</Descriptions.Item>
-            <Descriptions.Item label='规格'>{publicIp}</Descriptions.Item>
-            <Descriptions.Item label='镜像'>{publicIp}</Descriptions.Item>
-            <Descriptions.Item label='运行状态'>
-              <Badge status={StatusMap[status]} text={status} />
-            </Descriptions.Item>
-          </Descriptions>
-          <div className='instance-box-btns'>
-            <Button type="primary" className='instance-box-btn' onClick={onDestroyClick}>销毁实例</Button>
-            <Button type="primary" className='instance-box-btn' onClick={onEditClick}>修改实例信息</Button>
-            <Button type="primary" className='instance-box-btn' onClick={onSearchClick}>查看实例详情</Button>
-          </div>
-        </Card>
-      </div>
+      <>
+        <div className='instance-box'>
+          <Card title={instanceName} extra={getManagementBtns()}>
+            <Descriptions size='small' bordered>
+              <Descriptions.Item label='实例ID'>{instanceId}</Descriptions.Item>
+              <Descriptions.Item label='地域'>{region}</Descriptions.Item>
+              <Descriptions.Item label='规格'>{instanceType}</Descriptions.Item>
+              <Descriptions.Item label='镜像'>{image}</Descriptions.Item>
+              <Descriptions.Item label='公网IP'>{publicIp}</Descriptions.Item>
+              <Descriptions.Item label='运行状态'>
+                <Badge status={StatusMap[status]} text={status} />
+              </Descriptions.Item>
+            </Descriptions>
+            <div className='instance-box-btns'>
+              <Button type="primary" className='instance-box-btn' onClick={this.onDestroyClick}>销毁实例</Button>
+              <Button type="primary" className='instance-box-btn' onClick={() => onEditClick(instanceId, instanceKey)}>修改实例信息</Button>
+              <Button type="primary" className='instance-box-btn' onClick={this.onSearchClick}>查看实例详情</Button>
+            </div>
+          </Card>
+        </div>
+        <DetailsView cloudType={cloudType} instanceId={instanceId} visible={detailsPageVisible} onClose={this.closeDetailsDrawer} />
+        <Dialog visible={dialogVisible} title={'销毁实例'} content={`是否销毁实例 ${instanceId}?`} onConfirm={this.destroyInstance} onClose={() => this.setDialogVisible(false)} />
+      </>
     );
   }
 

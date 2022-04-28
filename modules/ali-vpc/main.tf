@@ -6,13 +6,16 @@ data "alicloud_zones" "default" {
 resource "alicloud_vpc" "vpc" {
   name       = "alicloud_vpc_default"
   cidr_block = "172.16.0.0/16"
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 resource "alicloud_vswitch" "vsw" {
-  vswitch_name      = "alicloud_vswitch_default"
-  vpc_id            = alicloud_vpc.vpc.id
-  cidr_block        = "172.16.0.0/24"
-  zone_id           = data.alicloud_zones.default.zones[0].id
+  vswitch_name = "alicloud_vswitch_default"
+  vpc_id       = alicloud_vpc.vpc.id
+  cidr_block   = "172.16.0.0/24"
+  zone_id      = data.alicloud_zones.default.zones[0].id
 }
 
 # Create security group
