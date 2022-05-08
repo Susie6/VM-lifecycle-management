@@ -11,7 +11,6 @@ resource "alicloud_instance" "instance" {
   security_groups         = [var.secgroup_id]
   instance_type           = var.instance_type
   image_id                = data.alicloud_images.images_ds.images.0.id
-  status                  = var.status
   system_disk_category    = var.system_disk_category
   system_disk_name        = var.system_disk_name
   system_disk_description = var.system_disk_description

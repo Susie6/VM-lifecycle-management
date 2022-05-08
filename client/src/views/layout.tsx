@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState }  from 'react';
 import { Layout, Menu } from 'antd';
 import { MailOutlined, AppstoreOutlined, SettingOutlined } from '@ant-design/icons';
 import { VerticalMenu } from '../components/vertical_menu';
@@ -10,6 +10,7 @@ import { RouterView } from '../router/content';
 interface PageLayoutProps { };
 
 export function PageLayout(props: PageLayoutProps) {
+  const [cloudType, setCloudType] = useState(CloudType.AWS);
   const getMenuOptions = (type: CloudType) => {
     return [{
       key: `${type}_${MenuSubItemType.Other}`,
@@ -39,6 +40,7 @@ export function PageLayout(props: PageLayoutProps) {
     const arr = e.key.split('_');
     navigate(`/${arr[1]}/${arr[0]}`);
     console.log("key: ", e);
+    setCloudType(arr[0]);
   }
 
   const { Header, Content, Sider } = Layout;
@@ -90,7 +92,7 @@ export function PageLayout(props: PageLayoutProps) {
             <Content
               className="site-layout-background"
             >
-              <RouterView cloudType={CloudType.AWS}></RouterView>
+              <RouterView cloudType={cloudType}></RouterView>
             </Content>
           </Layout>
         </Layout>

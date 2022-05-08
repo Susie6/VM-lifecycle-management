@@ -41,7 +41,7 @@ export class ProfileForm extends React.Component<ProfileProps, ProfileState> {
       const res = data as ResponseData;
       if (res.code === 0) {
         if (res.result !== null) {
-          const result = res.result as { access_key: string, secret_key: string, region: string, resource_type: CloudType }
+          const result = res.result as { access_key: string, secret_key: string, region: AwsRegion | AliRegion | HuaweiRegion, resource_type: CloudType }
           this.onFill({
             access_key: result.access_key,
             secret_key: result.secret_key,

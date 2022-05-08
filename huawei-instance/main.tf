@@ -21,7 +21,7 @@ module "huawei_resources" {
   source   = "../modules/huawei-cloud-module"
   for_each = var.huawei_input.list_result
 
-  availability_zone = each.value.availability_zone
+  availability_zone = var.huawei_input.availability_zone
   instance_type     = each.value.instance_type
   instance_name     = each.value.instance_name
   system_disk_type  = each.value.system_disk_type

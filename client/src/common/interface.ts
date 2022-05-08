@@ -1,4 +1,4 @@
-import { InstanceStatus, AwsInstanceType } from './enum';
+import { InstanceStatus, AwsInstanceType, AwsRegion, AliRegion, HuaweiRegion } from './enum';
 export interface BoxInfo {
   title: string;
   count: number;
@@ -117,12 +117,13 @@ export interface AwsResult {
 export interface StaticProfileForm {
   access_key: string;
   secret_key: string;
-  region: string;
+  region: AwsRegion | AliRegion | HuaweiRegion;
 }
 
 interface FormValue {
   instance_type: string;
   instance_name: string;
+  availability_zone: string;
 }
 
 export interface AwsForm extends FormValue {
@@ -131,7 +132,6 @@ export interface AwsForm extends FormValue {
 
 
 export interface AliForm extends FormValue {
-  availability_zone: string;
   system_disk_category: string;
   system_disk_name: string;
   system_disk_description: string;
@@ -143,7 +143,6 @@ export interface AliForm extends FormValue {
 }
 
 export interface HuaweiForm extends FormValue {
-  availability_zone: string;
   image_name: string;
   system_disk_type: string;
   system_disk_size: string;

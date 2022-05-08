@@ -49,10 +49,6 @@ variable "data_disk_description" {
   default = "alicloud_data_disk_description"
 }
 
-variable "status" {
-  description = "The instance status. Valid values: [Running, Stopped]."
-}
-
 variable "availability_zone" {
   # "cn-beijing-b"
 }

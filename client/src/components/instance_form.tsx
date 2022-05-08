@@ -7,6 +7,7 @@ import {
   AliInstanceType,
   HuaweiInstanceType,
   DiskCategory,
+  AwsAvailableZone,
   AliAvailableZone,
   HuaweiAvailableZone,
   AwsRegion,
@@ -25,6 +26,7 @@ interface InstanceFormProps {
   cloudType: CloudType;
   drawerType: DrawerType;
   disableSubmit: boolean;
+  region: AwsRegion | AliRegion | HuaweiRegion | null;
   instanceId?: string | null;
   onClickSubmit: (values: HuaweiForm | AwsForm | AliForm) => void;
   onClickCancel: () => void;
@@ -36,11 +38,9 @@ interface InstanceFormState {
 }
 
 export class InstanceForm extends React.Component<InstanceFormProps, InstanceFormState> {
-  public region: AwsRegion | AliRegion | HuaweiRegion;
   public formRef = React.createRef<FormInstance>();
   constructor(props: InstanceFormProps) {
     super(props);
-    this.region = AliRegion.BeiJing; // 向后端查询
     this.state = {
       disableSubmit: false,
       loading: true,
@@ -55,6 +55,8 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
     const { drawerType } = this.props;
     if (drawerType === DrawerType.EDIT) {
       this.setInstanceInfo();
+    } else {
+      this.setLoadingStatus(false);
     }
   }
 
@@ -77,6 +79,7 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
                 instance_type: result.item.values.instance_type,
                 instance_name: result.item.values.tags.Name,
                 ami_id: result.item.values.ami,
+                availability_zone: result.item.values.availability_zone,
               }
               this.onFill(values);
               break;
@@ -124,13 +127,12 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
   }
 
   renderAvailableZoneOptions() {
-    const { cloudType: type } = this.props;
-    const { region } = this;
+    const { cloudType: type, region } = this.props;
     let options: string[] = [];
     switch (type) {
-      // case CloudType.AWS:
-      //   options = Object.values(AwsInstanceType);
-      //   return options.map(op => <Select.Option value={op}>{op}</Select.Option>);
+      case CloudType.AWS:
+        options = AwsAvailableZone[region as AwsRegion];
+        return options.map(op => <Select.Option value={op}>{op}</Select.Option>);
       case CloudType.ALI:
         options = AliAvailableZone[region as AliRegion];
         return options.map(op => <Select.Option value={op}>{op}</Select.Option>);
@@ -314,6 +316,18 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
               <Input />
             </Form.Item>
             <Form.Item
+              label="可用区"
+              name="availability_zone"
+              rules={[{ required: true, message: '请输入可用区!' }]}
+            >
+              <Select
+                placeholder="请选择可用区"
+                allowClear
+              >
+                {this.renderAvailableZoneOptions()}
+              </Select>
+            </Form.Item>
+            <Form.Item
               label="AMI"
               name="ami_id"
               rules={[{ required: true, message: '请输入AMI!' }]}
@@ -375,7 +389,6 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
             >
               <Select
                 placeholder="请选择可用区"
-                // onChange={this.onGenderChange}
                 allowClear
               >
                 {this.renderAvailableZoneOptions()}

@@ -29,16 +29,25 @@ export const StatusMap = {
 
 export enum AwsRegion {
   // 待确认
-  // Beijing = 'cn-beijing',
   East = 'us-east-1',
+  East2 = 'us-east-2',
+  West = 'us-west-1',
+  West2 = 'us-west-2',
+}
+
+export const AwsAvailableZone = {
+  [AwsRegion.East]: ['us-east-1a', 'us-east-1b'],
+  [AwsRegion.East2]: ['us-east-2a', 'us-east-2b'],
+  [AwsRegion.West]: ['us-west-1a', 'us-west-1b'],
+  [AwsRegion.West2]: ['us-west-2a', 'us-west-2b'],
 }
 
 export enum AliRegion {
   // cn-shanghai cn-shenzhen cn-beijing cn-hangzhou cn-zhangjiakou cn-qingdao
+  HangZhou = 'cn-hangzhou',
   ShangHai = 'cn-shanghai',
   ShenZhen = 'cn-shenzhen',
   BeiJing = 'cn-beijing',
-  HangZhou = 'cn-hangzhou',
   ZhangJiaKou = 'cn-zhangjiakou',
   QingDao = 'cn-qingdao',
 }
@@ -55,12 +64,12 @@ export enum HuaweiRegion {
 export const HuaweiAvailableZone = {
   [HuaweiRegion.BeiJing1]: ['cn-north-1a', 'cn-north-1b', 'cn-north-1c'],
   [HuaweiRegion.BeiJing4]: ['cn-north-4a', 'cn-north-4b', 'cn-north-4c', 'cn-north-4g'],
-  [HuaweiRegion.ShangHai2]: ['cn-east-2a', 'cn-east-2b', 'cn-east-2c', 'cn-east-2d'],
+  [HuaweiRegion.ShangHai2]: ['cn-hangzhou-g'],
   [HuaweiRegion.ShangHai3]: ['cn-east-3a', 'cn-east-3b', 'cn-east-3c',],
   [HuaweiRegion.GuangZhou1]: ['cn-south-1a', 'cn-south-1b', 'cn-south-1c', 'cn-south-1e', 'cn-south-1f'],
 }
 
-export const AliAvailableZone = {
+export const AliAvailableZone = { // 这里要改
   [AliRegion.BeiJing]: ['cn-north-1a', 'cn-north-1b', 'cn-north-1c'],
   [AliRegion.ShenZhen]: ['cn-north-4a', 'cn-north-4b', 'cn-north-4c', 'cn-north-4g'],
   [AliRegion.ShangHai]: ['cn-east-2a', 'cn-east-2b', 'cn-east-2c', 'cn-east-2d'],

@@ -4,7 +4,7 @@ data "alicloud_zones" "default" {
 }
 
 resource "alicloud_vpc" "vpc" {
-  name       = "alicloud_vpc_default"
+  vpc_name       = "alicloud_vpc_default"
   cidr_block = "172.16.0.0/16"
   lifecycle {
     create_before_destroy = false

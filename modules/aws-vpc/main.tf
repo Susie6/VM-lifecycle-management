@@ -7,6 +7,9 @@ resource "aws_vpc" "vpc" {
   tags = {
     Name = "my aws vpc"
   }
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 resource "aws_security_group" "aws_sec_group" {
@@ -15,18 +18,10 @@ resource "aws_security_group" "aws_sec_group" {
 
   // To Allow SSH Transport
   ingress {
-    from_port   = 22
-    protocol    = "tcp"
-    to_port     = 22
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  // To Allow Port 80 Transport
-  ingress {
     from_port   = 80
-    protocol    = ""
+    protocol    = "tcp"
     to_port     = 80
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [aws_vpc.vpc.cidr_block]
   }
 
   egress {
@@ -37,14 +32,16 @@ resource "aws_security_group" "aws_sec_group" {
   }
 
   lifecycle {
-    create_before_destroy = true
+    create_before_destroy = false
   }
 }
 
 #创建internet网关，别名test，并附加到VPC
 resource "aws_internet_gateway" "test" {
-  #绑定到vpc，${aws_vpc.test.id}为获取步骤2创建的vpc id
   vpc_id = aws_vpc.vpc.id
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 #创建子网，别名a_public
@@ -52,11 +49,14 @@ resource "aws_subnet" "a_public" {
   #指定所属的VPC
   vpc_id = aws_vpc.vpc.id
   #设置ip块
-  cidr_block = "172.16.17.0/24"
-  #设置可用区
-  availability_zone = "ap-northeast-1a" // 这里需要学一下
+  cidr_block = "172.16.16.0/24"
   #设置标签
-  tags = { Name = "M2M Tokyo POC Public-a" }
+  tags = { Name = "subnet_default" }
+
+  availability_zone = var.availability_zone
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 #创建路由表

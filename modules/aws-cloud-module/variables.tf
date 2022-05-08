@@ -13,3 +13,7 @@ variable "secgroup_id" {}
 variable "ami_id" {
   type = string
 }
+
+variable "availability_zone" {
+  type = string
+}

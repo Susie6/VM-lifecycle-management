@@ -20,6 +20,7 @@ interface InstanceViewState {
   drawerVisible: boolean;
   isAddMode: boolean; // 是创建还是修改
   InstanceList: InstanceBoxInfo[] | null;
+  cloudType: CloudType;
 }
 export class InstanceView extends React.Component<InstanceViewProps, InstanceViewState> {
   public region: AwsRegion | AliRegion | HuaweiRegion | null;
@@ -32,18 +33,30 @@ export class InstanceView extends React.Component<InstanceViewProps, InstanceVie
       drawerVisible: false,
       isAddMode: true,
       InstanceList: null,
+      cloudType: props.cloudType,
     }
     this.region = null;
     this.selectedInstanceId = null;
     this.selectedinstanceKey = null;
   }
 
+  componentWillReceiveProps(nextProps: InstanceViewProps) {
+    console.log("cloudType change: ", nextProps.cloudType);
+    if (this.state.cloudType !== nextProps.cloudType) {
+      this.setState({
+        cloudType: nextProps.cloudType,
+        InstanceList: null,
+      }, () => {
+        this.setInstanceInfo();
+      });
+    }
+  }
   componentDidMount() {
     this.setInstanceInfo();
   }
 
   async setInstanceInfo() {
-    const { cloudType } = this.props;
+    const { cloudType } = this.state;
     const region = await this.getRegion();
     if (region !== "None") {
       switch (cloudType) {
@@ -91,7 +104,7 @@ export class InstanceView extends React.Component<InstanceViewProps, InstanceVie
   }
 
   getRegion() {
-    const { cloudType } = this.props;
+    const { cloudType } = this.state;
     return post(Urls.ShowRegion, { resource_type: cloudType }).then(data => {
       const res = data as ResponseData;
       if (res.code === 0 && res.result !== null) {
@@ -104,44 +117,45 @@ export class InstanceView extends React.Component<InstanceViewProps, InstanceVie
   }
 
   getAllInstance() {
-    const { cloudType } = this.props;
+    const { cloudType } = this.state;
     post(Urls.ShowResourceInfo, { resource_type: cloudType }).then(data => {
       const res = data as ResponseData;
       if (res.code === 0) {
         let arr: InstanceBoxInfo[] = [];
-        switch (cloudType) {
-          case CloudType.AWS:
-            const result = res.result as AwsResultItem[];
-            result.forEach(item => {
-              const key = getInstanceKey(item.address);
-              arr.push({
-                instanceKey: key,
-                instanceId: item.values.id,
-                instanceName: item.values.tags.Name,
-                region: this.region,
-                publicIp: item.values.public_ip,
-                status: item.values.instance_state,
-                instanceType: item.values.instance_type,
-                image: item.values.ami,
-              })
-            });
-            break;
-          case CloudType.ALI:
-            //..
-            break;
-          case CloudType.HUAWEI:
-            break;
+        if (res.result) {
+          switch (cloudType) {
+            case CloudType.AWS:
+              const result = res.result as AwsResultItem[];
+              result.forEach(item => {
+                const key = getInstanceKey(item.address);
+                arr.push({
+                  instanceKey: key,
+                  instanceId: item.values.id,
+                  instanceName: item.values.tags.Name,
+                  region: this.region,
+                  publicIp: item.values.public_ip,
+                  status: item.values.instance_state,
+                  instanceType: item.values.instance_type,
+                  image: item.values.ami,
+                })
+              });
+              break;
+            case CloudType.ALI:
+              console.log(res.result);
+              break;
+            case CloudType.HUAWEI:
+              break;
+          }
+          this.setState({
+            InstanceList: arr,
+          });
         }
-        this.setState({
-          InstanceList: arr,
-        })
       }
     });
   }
 
   render() {
-    const { cloudType } = this.props;
-    const { drawerVisible, isAddMode, InstanceList } = this.state;
+    const { drawerVisible, isAddMode, InstanceList, cloudType } = this.state;
     const boxes = this.getNumberBoxes();
     return (
       <div className='instance-resource'>

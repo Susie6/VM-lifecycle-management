@@ -1,6 +1,6 @@
 import React from 'react';
 import { Drawer, Steps, message } from 'antd';
-import { DrawerType, CloudType } from '../common/enum';
+import { DrawerType, CloudType, AwsRegion, AliRegion, HuaweiRegion } from '../common/enum';
 import { ResponseData, StaticProfileForm, HuaweiForm, AliForm, AwsForm } from '../common/interface';
 import { InstanceForm } from '../components/instance_form';
 import { ProfileForm } from '../components/profile_form';
@@ -24,6 +24,7 @@ interface DrawerState {
 }
 
 export class DrawerView extends React.Component<DrawerProps, DrawerState> {
+  public region: AwsRegion | AliRegion | HuaweiRegion | null;
   constructor(props: DrawerProps) {
     super(props);
     this.state = {
@@ -31,6 +32,7 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
       current: 0,
       disableSubmit: false,
     }
+    this.region = null;
   }
 
   componentWillReceiveProps(nextProps: DrawerProps) {
@@ -46,10 +48,12 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
       secret_key: values.secret_key,
       region: values.region,
     }
+    this.region = values.region;
     const msgKey = 'static';
     message.loading({ content: '正在执行初始化...', key: msgKey, duration: 10 });
     post(Urls.StaticProfile, postData).then((data) => {
       const res = data as ResponseData;
+      console.log(res);
       if (res.code === 0) {
         this.setState({
           current: 1,
@@ -59,6 +63,8 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
         message.error({ content: res.msg, key: msgKey });
       }
       this.setSubmitBtnDisable(false);
+    }).catch(err => {
+      console.log(err);
     })
   }
 
@@ -123,7 +129,7 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
       },
       {
         title: `${cloudType} 实例信息输入`,
-        content: <InstanceForm cloudType={cloudType} drawerType={type} onClickCancel={() => this.setDrawerVisible(false)} onClickSubmit={this.submitInstanceForm} instanceId={instanceId} disableSubmit={disableSubmit} />,
+        content: <InstanceForm cloudType={cloudType} drawerType={type} region={this.region} onClickCancel={() => this.setDrawerVisible(false)} onClickSubmit={this.submitInstanceForm} instanceId={instanceId} disableSubmit={disableSubmit} />,
       }
     ];
     return (
@@ -140,7 +146,7 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
               <Steps.Step key={item.title} title={item.title} />
             ))}
           </Steps>
-            <div className="steps-content">{steps[current].content}</div>
+          <div className="steps-content">{steps[current].content}</div>
         </Drawer>
       </div>
     );

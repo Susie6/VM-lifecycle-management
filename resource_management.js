@@ -69,7 +69,7 @@ app.post('/staticProfile', async (request, response) => {
     secret_key,
     region,
   }
-  await toJson(json_path, newData, resource_type);
+  const oldData = await toJson(json_path, newData, resource_type);
   const {
     code,
     cmd_info
@@ -133,6 +133,7 @@ app.post('/staticProfile', async (request, response) => {
       msg: '静态凭证无效，详情请查看报错信息！'
     }
     response.send(JSON.stringify(res));
+    await toJson(json_path, oldData, resource_type);
   }
 });
 
@@ -147,12 +148,13 @@ app.post('/applyResource', async (request, response) => {
       instance_type: request.body.instance_type,
       instance_name: request.body.instance_name,
       ami_id: request.body.ami_id,
+      availability_zone: request.body.availability_zone,
     };
   } else if (resource_type === RESOURCE_TYPE.ALI) {
     newData = {
       instance_type: request.body.instance_type,
       instance_name: request.body.instance_name,
-      availability_zone: request.body.availability_zone,
+      // availability_zone: request.body.availability_zone,
       system_disk_category: request.body.system_disk_category,
       system_disk_name: request.body.system_disk_name,
       system_disk_description: request.body.system_disk_description,
@@ -167,7 +169,7 @@ app.post('/applyResource', async (request, response) => {
     newData = {
       instance_type: request.body.instance_type,
       instance_name: request.body.instance_name,
-      availability_zone: request.body.availability_zone,
+      // availability_zone: request.body.availability_zone,
       image_name: request.body.image_name,
       system_disk_type: request.body.system_disk_type,
       system_disk_size: request.body.system_disk_size,
@@ -176,11 +178,15 @@ app.post('/applyResource', async (request, response) => {
     };
   }
   const key = generateUniqueId();
-  await updateResourceInfo(newData, resource_type, OPERATION_TYPE.ADD, key);
+  const json_path = `${resource_type}-instance/${variable_file}`;
+  await toJson(json_path, {
+    availability_zone: request.body.availability_zone
+  }, resource_type);
+  const oldData = await updateResourceInfo(newData, resource_type, OPERATION_TYPE.ADD, key);
   console.log("finished writing")
   // terraform apply --auto-approve -target 'module.aws_resources[\"l2iufnwg\"].aws_instance.instance'
-  const cmd = `${TERRAFORM_COMMANDS.APPLY} -target "module.${resource_type}_resources[\\"${key}\\"].${resource_type}_instance.instance"`;
-  // const cmd = TERRAFORM_COMMANDS.APPLY;
+  // const cmd = `${TERRAFORM_COMMANDS.APPLY} -target "module.${resource_type}_resources[\\"${key}\\"].${resource_type}_instance.instance"`;
+  const cmd = TERRAFORM_COMMANDS.APPLY;
   const {
     code,
     cmd_info
@@ -201,6 +207,7 @@ app.post('/applyResource', async (request, response) => {
       msg: '资源创建失败，原因请查看报错信息！'
     };
     response.send(JSON.stringify(res));
+    revertJson(oldData, resource_type);
   }
 });
 
@@ -210,6 +217,7 @@ app.post('/destroyResource', async (request, response) => {
     instance_id
   } = request.body;
   let res = {};
+  let oldData = null;
   const cmd_path = `${resource_type}-instance`;
   const {
     code: search_code,
@@ -218,8 +226,10 @@ app.post('/destroyResource', async (request, response) => {
   if (search_code === 0) {
     // module.aws_resources[\"instance_a\"].aws_instance.instance
     const instance_key = info.instance_key;
+    console.log("start destroying");
     const cmd = `${TERRAFORM_COMMANDS.DESTROY} -target "module.${resource_type}_resources[\\"${instance_key}\\"].${resource_type}_instance.instance" --auto-approve`;
     const result = await execute(cmd, cmd_path);
+    console.log("finish destroying");
     if (result.code === 0) {
       res = {
         code: 0,
@@ -227,7 +237,7 @@ app.post('/destroyResource', async (request, response) => {
         msg: '资源销毁成功！'
       };
       response.send(JSON.stringify(res));
-      await updateResourceInfo(null, resource_type, OPERATION_TYPE.DELETE, instance_key);
+      oldData = await updateResourceInfo(null, resource_type, OPERATION_TYPE.DELETE, instance_key);
     } else {
       res = {
         code: 1,
@@ -291,8 +301,14 @@ app.post('/updateInstanceInfo', async (request, response) => {
   } = request.body;
   const cmd_path = `${resource_type}-instance`;
   let res = {};
-  await updateResourceInfo(modified_result, resource_type, OPERATION_TYPE.MODIFY, instance_key);
-  const cmd = `${TERRAFORM_COMMANDS.APPLY} -target "module.${resource_type}_resources[\\"${instance_key}\\"].${resource_type}_instance.instance"`;
+  const json_path = `${resource_type}-instance/${variable_file}`;
+  await toJson(json_path, {
+    availability_zone: modified_result.availability_zone
+  }, resource_type);
+  delete modified_result.availability_zone;
+  const oldData = await updateResourceInfo(modified_result, resource_type, OPERATION_TYPE.MODIFY, instance_key);
+  // const cmd = `${TERRAFORM_COMMANDS.APPLY} -target "module.${resource_type}_resources[\\"${instance_key}\\"].${resource_type}_instance.instance"`;
+  const cmd = TERRAFORM_COMMANDS.APPLY;
   const {
     code,
     cmd_info
@@ -311,6 +327,7 @@ app.post('/updateInstanceInfo', async (request, response) => {
       msg: '资源更新失败，详情请查看报错信息！'
     }
     response.send(JSON.stringify(res));
+    revertJson(oldData, resource_type);
   }
 });
 
@@ -325,7 +342,8 @@ app.post('/showResourceInfo', async (request, response) => {
   } = await execute(TERRAFORM_COMMANDS.SHOW_RESOURCES_INFO, cmd_path);
   if (code === 0) {
     const json_data = JSON.parse(cmd_info);
-    const instance_info = json_data.values.root_module.child_modules.filter(item => item.address.includes(`${resource_type}_resources`)).map(item => item.resources[0]);
+    const instance_info = json_data.values ? json_data.values.root_module.child_modules.filter(item => item.address.includes(`${resource_type}_resources`)).map(item => item.resources[2]) : null;
+    // const instance_info = null;
     const res = {
       code,
       command_error: null,
@@ -403,7 +421,10 @@ function execute(cmd, working_path) {
       cwd: working_path,
       maxBuffer: 2000 * 1024,
     }, function (error, stdout, stderr) {
-      console.log('here')
+      console.log('here');
+      console.log(error);
+      console.log(stdout);
+      console.log(stderr);
       let code = 0;
       if (error) {
         code = 1;
@@ -443,12 +464,21 @@ async function toJson(file, newData, resource_type) {
   // newData的数据结构：key value：修改后的值
   const type = `${resource_type}_input`
   const data = await fromJson(file);
+  const oldData = data;
   Object.keys(newData).forEach(key => {
     data[type][key] = newData[key];
   });
   const json_data = JSON.stringify(data, null, "\t");
   fs.writeFileSync(file, json_data);
   console.log("写入文件")
+  return oldData;
+}
+
+function revertJson(oldData, resource_type) {
+  const file = `${resource_type}-instance/${variable_file}`;
+  const json_data = JSON.stringify(oldData, null, "\t");
+  fs.writeFileSync(file, json_data);
+  console.log("还原文件")
 }
 
 async function updateResourceInfo(newData, resource_type, operation_type, instance_key) {
@@ -456,6 +486,7 @@ async function updateResourceInfo(newData, resource_type, operation_type, instan
   const type = `${resource_type}_input`
   const file_path = `${resource_type}-instance/${variable_file}`;
   const data = await fromJson(file_path);
+  const oldData = data;
   if (operation_type === OPERATION_TYPE.ADD) {
     data[type].list_result[instance_key] = {};
     Object.keys(newData).forEach(key => {
@@ -470,6 +501,7 @@ async function updateResourceInfo(newData, resource_type, operation_type, instan
   }
   const json_data = JSON.stringify(data, null, "\t");
   fs.writeFileSync(file_path, json_data);
+  return oldData;
 }
 
 function generateUniqueId() {
@@ -491,7 +523,7 @@ async function getInstanceInfo(resource_type, instance_id) {
   } = await execute(TERRAFORM_COMMANDS.SHOW_RESOURCES_INFO, cmd_path);
   if (code === 0) {
     const json_data = JSON.parse(cmd_info);
-    const instance_info = json_data.values.root_module.child_modules.filter(item => item.address.includes(`${resource_type}_resources`)).map(item => item.resources[0]);
+    const instance_info = json_data.values.root_module ? json_data.values.root_module.child_modules.filter(item => item.address.includes(`${resource_type}_resources`)).map(item => item.resources[2]) : [];
     let res = {
       code: 2,
       info: "该资源尚未创建！"
@@ -516,6 +548,7 @@ async function getInstanceInfo(resource_type, instance_id) {
     };
   }
 }
+
 app.listen(8000, () => {
   console.log("listening 8000……");
 });
