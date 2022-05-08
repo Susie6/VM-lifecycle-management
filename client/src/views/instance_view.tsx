@@ -3,6 +3,7 @@ import { CloudType, AwsRegion, DrawerType, AliRegion, HuaweiRegion } from '../co
 import { NumberBox } from '../components/number_box';
 import { InstanceBox, InstanceBoxInfo } from '../components/instance_box';
 import { Toolbar } from '../components/toolbar';
+import { EmptyView } from '../components/empty';
 import { BoxInfo } from '../common/interface';
 import { DrawerView } from './add_or_edit';
 import { ResponseData, AwsResultItem } from '../common/interface';
@@ -151,7 +152,7 @@ export class InstanceView extends React.Component<InstanceViewProps, InstanceVie
           <Toolbar onAddInstance={this.handleAddInstanceClick}></Toolbar>
         </div>
         <div className='instance-resource--details'>
-          {InstanceList && InstanceList.map(item => {
+          {InstanceList ? InstanceList.map(item => {
             return <InstanceBox
               instanceKey={item.instanceKey}
               instanceId={item.instanceId}
@@ -164,7 +165,7 @@ export class InstanceView extends React.Component<InstanceViewProps, InstanceVie
               cloudType={cloudType}
               onEditClick={this.handleEditInstanceClick}
             />
-          })}
+          }) : <EmptyView description='暂无已创建资源' />}
         </div>
         <DrawerView
           cloudType={cloudType}

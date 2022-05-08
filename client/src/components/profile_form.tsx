@@ -1,6 +1,6 @@
 import React from 'react';
-import { Form, Button, Input, Select } from 'antd';
-import { CloudType, AwsRegion, AliRegion, HuaweiRegion, } from '../common/enum';
+import { Form, Button, Input, Select, Spin } from 'antd';
+import { CloudType, AwsRegion, AliRegion, HuaweiRegion } from '../common/enum';
 import { StaticProfileForm } from '../common/interface'
 import { FormInstance } from 'antd/lib/form';
 import { post } from '../api/request';
@@ -8,17 +8,34 @@ import { Urls } from '../api/apis';
 import { ResponseData } from '../common/interface';
 interface ProfileProps {
   cloudType: CloudType;
+  disableSubmit: boolean;
   onClickSubmit: (values: StaticProfileForm) => void;
   onClickCancel: () => void;
 }
 
-export class ProfileForm extends React.Component<ProfileProps> {
+interface ProfileState {
+  disableSubmit: boolean;
+  loading: boolean;
+}
+export class ProfileForm extends React.Component<ProfileProps, ProfileState> {
   public formRef = React.createRef<FormInstance>();
   constructor(props: ProfileProps) {
     super(props);
+    this.state = {
+      disableSubmit: false,
+      loading: true,
+    }
   }
-  
+
+  componentWillReceiveProps(nextProps: ProfileProps) {
+    this.setSubmitBtnDisable(nextProps.disableSubmit);
+  }
+
   componentDidMount() {
+    this.fillStaticProfile();
+  }
+
+  fillStaticProfile() {
     const { cloudType } = this.props;
     post(Urls.ShowStaticProfile, { resource_type: cloudType }).then(data => {
       const res = data as ResponseData;
@@ -32,7 +49,20 @@ export class ProfileForm extends React.Component<ProfileProps> {
           });
         }
       }
+      this.setLoadingStatus(false);
     });
+  }
+
+  setSubmitBtnDisable = (disableSubmit: boolean) => {
+    this.setState({
+      disableSubmit,
+    })
+  }
+
+  setLoadingStatus = (loading: boolean) => {
+    this.setState({
+      loading,
+    })
   }
 
   onFill = (values: StaticProfileForm) => {
@@ -64,55 +94,57 @@ export class ProfileForm extends React.Component<ProfileProps> {
 
   render() {
     const { cloudType, onClickCancel } = this.props;
+    const { disableSubmit, loading } = this.state;
     return (
       <>
-        <Form
-          layout="horizontal"
-          requiredMark={true}
-          labelCol={{ span: 5 }}
-          wrapperCol={{ span: 16 }}
-          initialValues={{ remember: true }}
-          ref={this.formRef}
-        >
-          <Form.Item
-            label="Access_key"
-            name="access_key"
-            key="access_key"
-            rules={[{ required: true, message: '请输入 access_key!' }]}
+        <Spin spinning={loading} tip={'加载中……'}>
+          <Form
+            layout="horizontal"
+            requiredMark={true}
+            labelCol={{ span: 5 }}
+            wrapperCol={{ span: 16 }}
+            initialValues={{ remember: true }}
+            ref={this.formRef}
           >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Secret_key"
-            name="secret_key"
-            key="secret_key"
-            rules={[{ required: true, message: '请输入 secret_key!' }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Region"
-            name="region"
-            key="region"
-            rules={[{ required: true, message: '请输入 region!' }]}
-          >
-            <Select
-              placeholder="Select a option and change input text above"
-              // onChange={this.onGenderChange}
-              allowClear
+            <Form.Item
+              label="Access_key"
+              name="access_key"
+              key="access_key"
+              rules={[{ required: true, message: '请输入 access_key!' }]}
             >
-              {this.renderOptions(cloudType)}
-            </Select>
-          </Form.Item>
-          <Form.Item wrapperCol={{ offset: 5, span: 16 }} key="button">
-            <Button onClick={onClickCancel} style={{ marginRight: 8 }}>
-              取消
-            </Button>
-            <Button onClick={this.submit} type="primary">
-              下一步
-            </Button>
-          </Form.Item>
-        </Form>
+              <Input />
+            </Form.Item>
+            <Form.Item
+              label="Secret_key"
+              name="secret_key"
+              key="secret_key"
+              rules={[{ required: true, message: '请输入 secret_key!' }]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              label="Region"
+              name="region"
+              key="region"
+              rules={[{ required: true, message: '请输入 region!' }]}
+            >
+              <Select
+                placeholder="Select a option and change input text above"
+                allowClear
+              >
+                {this.renderOptions(cloudType)}
+              </Select>
+            </Form.Item>
+            <Form.Item wrapperCol={{ offset: 5, span: 16 }} key="button">
+              <Button onClick={onClickCancel} style={{ marginRight: 8 }} disabled={disableSubmit}>
+                取消
+              </Button>
+              <Button onClick={this.submit} type="primary" disabled={disableSubmit}>
+                下一步
+              </Button>
+            </Form.Item>
+          </Form>
+        </Spin>
       </>
     );
   }

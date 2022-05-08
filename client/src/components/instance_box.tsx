@@ -26,6 +26,7 @@ interface InstanceBoxProps extends InstanceBoxInfo {
 interface InstanceBoxState {
   detailsPageVisible: boolean;
   dialogVisible: boolean;
+  disableSubmit: boolean;
 }
 
 function getManagementBtns() {
@@ -47,6 +48,7 @@ export class InstanceBox extends React.Component<InstanceBoxProps, InstanceBoxSt
     this.state = {
       detailsPageVisible: false,
       dialogVisible: false,
+      disableSubmit: false,
     }
   }
 
@@ -68,28 +70,36 @@ export class InstanceBox extends React.Component<InstanceBoxProps, InstanceBoxSt
     })
   }
 
+  setSubmitBtnDisable = (disableSubmit: boolean) => {
+    this.setState({
+      disableSubmit,
+    })
+  }
+
   onDestroyClick = () => {
     this.setDialogVisible(true);
   }
 
   destroyInstance = () => {
     const { instanceId, cloudType } = this.props;
+    this.setSubmitBtnDisable(true);
     const msgKey = 'destroy';
     message.loading({ content: '正在销毁资源...', key: msgKey, duration: 10 });
     post(Urls.DestroyResource, { resource_type: cloudType, instance_id: instanceId }).then(data => {
       const res = data as ResponseData;
       if (res.code === 0) {
         message.success({ content: res.msg, key: msgKey});
-        this.setDialogVisible(false);
       } else {
         message.error({ content: res.msg, key: msgKey});
       }
+      this.setDialogVisible(false);
+      this.setSubmitBtnDisable(false);
     });
   }
 
   render() {
     const { instanceId, instanceName, region, publicIp, status, instanceType, image, cloudType, instanceKey, onEditClick } = this.props;
-    const { detailsPageVisible, dialogVisible } = this.state;
+    const { detailsPageVisible, dialogVisible, disableSubmit } = this.state;
     return (
       <>
         <div className='instance-box'>
@@ -112,7 +122,7 @@ export class InstanceBox extends React.Component<InstanceBoxProps, InstanceBoxSt
           </Card>
         </div>
         <DetailsView cloudType={cloudType} instanceId={instanceId} visible={detailsPageVisible} onClose={this.closeDetailsDrawer} />
-        <Dialog visible={dialogVisible} title={'销毁实例'} content={`是否销毁实例 ${instanceId}?`} onConfirm={this.destroyInstance} onClose={() => this.setDialogVisible(false)} />
+        <Dialog visible={dialogVisible} disableSubmit={disableSubmit} title={'销毁实例'} content={`是否销毁实例 ${instanceId}?`} onConfirm={this.destroyInstance} onClose={() => this.setDialogVisible(false)} />
       </>
     );
   }

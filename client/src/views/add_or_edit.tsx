@@ -20,6 +20,7 @@ interface DrawerProps {
 interface DrawerState {
   visible: boolean;
   current: number;
+  disableSubmit: boolean;
 }
 
 export class DrawerView extends React.Component<DrawerProps, DrawerState> {
@@ -28,6 +29,7 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
     this.state = {
       visible: false,
       current: 0,
+      disableSubmit: false,
     }
   }
 
@@ -37,6 +39,7 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
 
   submitProfileForm = (values: StaticProfileForm) => {
     const { cloudType } = this.props;
+    this.setSubmitBtnDisable(true);
     const postData = {
       resource_type: cloudType,
       access_key: values.access_key,
@@ -55,11 +58,13 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
       } else {
         message.error({ content: res.msg, key: msgKey });
       }
+      this.setSubmitBtnDisable(false);
     })
   }
 
   submitInstanceForm = (values: HuaweiForm | AwsForm | AliForm) => {
     const { cloudType, type, instanceKey } = this.props;
+    this.setSubmitBtnDisable(true);
     if (type === DrawerType.ADD) {
       const msgKey = 'create';
       message.loading({ content: '正在创建云资源...', key: msgKey, duration: 20 });
@@ -74,6 +79,7 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
           this.setDrawerVisible(false);
         } else {
           message.error({ content: res.msg, key: msgKey });
+          this.setSubmitBtnDisable(false);
         }
       })
     } else {
@@ -89,13 +95,16 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
           this.setDrawerVisible(false);
         } else {
           message.error({ content: res.msg, key: msgKey });
+          this.setSubmitBtnDisable(false);
         }
       })
     }
   }
 
-  onCancel = () => {
-    this.setDrawerVisible(false);
+  setSubmitBtnDisable = (disableSubmit: boolean) => {
+    this.setState({
+      disableSubmit,
+    })
   }
 
   setDrawerVisible = (visible: boolean) => {
@@ -106,15 +115,15 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
 
   render() {
     const { type, cloudType, instanceId, onClose } = this.props;
-    const { current } = this.state;
+    const { current, disableSubmit } = this.state;
     const steps = [
       {
         title: `${cloudType} 身份凭证确认`,
-        content: <ProfileForm cloudType={cloudType} onClickCancel={this.onCancel} onClickSubmit={this.submitProfileForm} />,
+        content: <ProfileForm cloudType={cloudType} onClickCancel={() => this.setDrawerVisible(false)} onClickSubmit={this.submitProfileForm} disableSubmit={disableSubmit} />,
       },
       {
         title: `${cloudType} 实例信息输入`,
-        content: <InstanceForm cloudType={cloudType} drawerType={type} onClickCancel={this.onCancel} onClickSubmit={this.submitInstanceForm} instanceId={instanceId} />,
+        content: <InstanceForm cloudType={cloudType} drawerType={type} onClickCancel={() => this.setDrawerVisible(false)} onClickSubmit={this.submitInstanceForm} instanceId={instanceId} disableSubmit={disableSubmit} />,
       }
     ];
     return (
@@ -131,7 +140,7 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
               <Steps.Step key={item.title} title={item.title} />
             ))}
           </Steps>
-          <div className="steps-content">{steps[current].content}</div>
+            <div className="steps-content">{steps[current].content}</div>
         </Drawer>
       </div>
     );
