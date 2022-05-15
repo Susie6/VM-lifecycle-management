@@ -5,24 +5,31 @@ import { InstanceBox, InstanceBoxInfo } from '../components/instance_box';
 import { Toolbar } from '../components/toolbar';
 import { EmptyView } from '../components/empty';
 import { BoxInfo } from '../common/interface';
-import { DrawerView } from './add_or_edit';
+import DrawerView from './add_or_edit';
+import DetailsView from './details';
 import { ResponseData, AwsResultItem, HuaweiResultItem, AliResultItem } from '../common/interface';
 import { post } from '../api/request';
 import { Urls } from '../api/apis';
 import { getInstanceKey } from '../utils/utils';
+import { updateInstanceListAction, setCreateDrawerVisibleAction, setLookupDrawerVisibleAction } from '../store/action';
+import { connect } from 'react-redux';
+import { Dispatch } from 'redux';
+import { GlobalState } from '../store/action_type';
 import './instance_view.css';
 
 interface InstanceViewProps {
   cloudType: CloudType;
+  instanceList: InstanceBoxInfo[] | null
+  updateInstanceList: (list: InstanceBoxInfo[] | null) => void;
+  setCreateDrawerVisible: (visible: boolean) => void;
+  setLookupDrawerVisible: (visible: boolean) => void;
 }
 
 interface InstanceViewState {
-  drawerVisible: boolean;
   isAddMode: boolean; // 是创建还是修改
-  InstanceList: InstanceBoxInfo[] | null;
   cloudType: CloudType;
 }
-export class InstanceView extends React.Component<InstanceViewProps, InstanceViewState> {
+class InstanceView extends React.Component<InstanceViewProps, InstanceViewState> {
   public region: AwsRegion | AliRegion | HuaweiRegion | null;
   public selectedInstanceId: string | null;
   public selectedinstanceKey: string | null;
@@ -30,9 +37,7 @@ export class InstanceView extends React.Component<InstanceViewProps, InstanceVie
   constructor(props: InstanceViewProps) {
     super(props);
     this.state = {
-      drawerVisible: false,
       isAddMode: true,
-      InstanceList: null,
       cloudType: props.cloudType,
     }
     this.region = null;
@@ -41,11 +46,9 @@ export class InstanceView extends React.Component<InstanceViewProps, InstanceVie
   }
 
   componentWillReceiveProps(nextProps: InstanceViewProps) {
-    console.log("cloudType change: ", nextProps.cloudType);
     if (this.state.cloudType !== nextProps.cloudType) {
       this.setState({
         cloudType: nextProps.cloudType,
-        InstanceList: null,
       }, () => {
         this.setInstanceInfo();
       });
@@ -53,6 +56,11 @@ export class InstanceView extends React.Component<InstanceViewProps, InstanceVie
   }
   componentDidMount() {
     this.setInstanceInfo();
+  }
+
+  reset = () => {
+    this.selectedInstanceId = null;
+    this.selectedinstanceKey = null;
   }
 
   async setInstanceInfo() {
@@ -76,31 +84,44 @@ export class InstanceView extends React.Component<InstanceViewProps, InstanceVie
 
   getNumberBoxes(): BoxInfo[] {
     return [{ title: '实例数量', count: 1 },
-    { title: '运行中', count: 1 },
-    { title: '即将过期', count: 1 },
-    { title: '已过期', count: 1 }]
+    { title: '运行中', count: 1 }]
   }
 
   handleAddInstanceClick = () => {
+    const { setCreateDrawerVisible } = this.props;
     this.setState({
-      drawerVisible: true,
       isAddMode: true,
+    }, () => {
+      setCreateDrawerVisible(true);
     });
   }
 
   handleEditInstanceClick = (instanceId: string, instanceKey: string) => {
+    const { setCreateDrawerVisible } = this.props;
     this.selectedInstanceId = instanceId;
     this.selectedinstanceKey = instanceKey;
     this.setState({
-      drawerVisible: true,
       isAddMode: false,
+    }, () => {
+      setCreateDrawerVisible(true);
+    });
+  }
+
+  handleSearchInstanceClick = (instanceId: string, instanceKey: string) => {
+    const { setLookupDrawerVisible } = this.props;
+    this.selectedInstanceId = instanceId;
+    this.selectedinstanceKey = instanceKey;
+    this.setState({
+      isAddMode: false,
+    }, () => {
+      setLookupDrawerVisible(true);
     });
   }
 
   closeDrawer = () => {
-    this.setState({
-      drawerVisible: false,
-    })
+    const { setCreateDrawerVisible } = this.props;
+    setCreateDrawerVisible(false);
+    this.reset();
   }
 
   getRegion() {
@@ -117,6 +138,7 @@ export class InstanceView extends React.Component<InstanceViewProps, InstanceVie
   }
 
   getAllInstance() {
+    const { updateInstanceList } = this.props;
     const { cloudType } = this.state;
     post(Urls.ShowResourceInfo, { resource_type: cloudType }).then(data => {
       const res = data as ResponseData;
@@ -182,13 +204,9 @@ export class InstanceView extends React.Component<InstanceViewProps, InstanceVie
               break;
           }
           if (arr.length > 0) {
-            this.setState({
-              InstanceList: arr,
-            });
+            updateInstanceList(arr);
           } else {
-            this.setState({
-              InstanceList: null,
-            })
+            updateInstanceList(null);
           }
         }
       }
@@ -196,7 +214,8 @@ export class InstanceView extends React.Component<InstanceViewProps, InstanceVie
   }
 
   render() {
-    const { drawerVisible, isAddMode, InstanceList, cloudType } = this.state;
+    const { isAddMode, cloudType } = this.state;
+    const { instanceList, setLookupDrawerVisible } = this.props;
     const boxes = this.getNumberBoxes();
     return (
       <div className='instance-resource'>
@@ -207,7 +226,7 @@ export class InstanceView extends React.Component<InstanceViewProps, InstanceVie
           <Toolbar onAddInstance={this.handleAddInstanceClick}></Toolbar>
         </div>
         <div className='instance-resource--details'>
-          {InstanceList ? InstanceList.map(item => {
+          {instanceList ? instanceList.map(item => {
             return <InstanceBox
               instanceKey={item.instanceKey}
               instanceId={item.instanceId}
@@ -219,18 +238,45 @@ export class InstanceView extends React.Component<InstanceViewProps, InstanceVie
               image={item.image}
               cloudType={cloudType}
               onEditClick={this.handleEditInstanceClick}
+              onSearchClick={this.handleSearchInstanceClick}
             />
           }) : <EmptyView description='暂无已创建资源' />}
         </div>
         <DrawerView
           cloudType={cloudType}
-          visible={drawerVisible}
           type={isAddMode ? DrawerType.ADD : DrawerType.EDIT}
           onClose={this.closeDrawer}
           instanceId={this.selectedInstanceId}
           instanceKey={this.selectedinstanceKey}
         />
+        <DetailsView
+          cloudType={cloudType}
+          instanceId={this.selectedInstanceId}
+          onClose={() => {
+            setLookupDrawerVisible(false);
+            this.reset();
+          }} />
       </div>
     );
   }
 }
+
+const mapStateToProps = (state: GlobalState) => ({
+  instanceList: state.instanceList,
+})
+
+const mapDispatchToProps = (dispatch: Dispatch) => {
+  return {
+    updateInstanceList: (list: InstanceBoxInfo[] | null) => {
+      dispatch(updateInstanceListAction(list));
+    },
+    setCreateDrawerVisible: (visible: boolean) => {
+      dispatch(setCreateDrawerVisibleAction(visible));
+    },
+    setLookupDrawerVisible: (visible: boolean) => {
+      dispatch(setLookupDrawerVisibleAction(visible));
+    },
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(InstanceView);

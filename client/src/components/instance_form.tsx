@@ -17,7 +17,7 @@ import {
   HuaweiDataDiskType,
   HuaweiImageName,
 } from '../common/enum';
-import { HuaweiForm, AliForm, AwsForm } from '../common/interface';
+import { HuaweiForm, AliForm, AwsForm, HuaweiResult, AliResult } from '../common/interface';
 import { FormInstance } from 'antd/lib/form';
 import { ResponseData, AwsResult } from '../common/interface';
 import { post } from '../api/request';
@@ -72,11 +72,13 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
     if (instanceId) {
       post(Urls.ShowSingleResource, { resource_type: cloudType, instance_id: instanceId }).then((data) => {
         const res = data as ResponseData;
+        let result;
+        let values;
         if (res.code === 0 && res.result !== null) {
           switch (cloudType) {
             case CloudType.AWS:
-              const result = res.result as AwsResult; // 根据 cloud type
-              const values = {
+              result = res.result as AwsResult;
+              values = {
                 instance_type: result.item.values.instance_type,
                 instance_name: result.item.values.tags.Name,
                 ami_id: result.item.values.ami,
@@ -85,10 +87,38 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
               this.onFill(values);
               break;
             case CloudType.ALI:
-              //..
+              result = res.result as AliResult;
+              values = {
+                instance_type: result.item.values.instance_type,
+                instance_name: result.item.values.tags.Name,
+                availability_zone: result.item.values.availability_zone,
+                system_disk_category: result.item.values.system_disk_category,
+                system_disk_name: result.item.values.system_disk_name,
+                system_disk_size: result.item.values.system_disk_size,
+                system_disk_description: result.item.values.system_disk_description,
+                data_disk_category: result.item.values.data_disks[0].category,
+                data_disk_name: result.item.values.data_disks[0].name,
+                data_disk_size: result.item.values.data_disks[0].size,
+                data_disk_description: result.item.values.data_disks[0].description,
+                password: result.item.values.password,
+              }
+
+              this.onFill(values);
               break;
             case CloudType.HUAWEI:
-              //..
+              result = res.result as HuaweiResult;
+              values = {
+                instance_type: result.item.values.flavor_id,
+                instance_name: result.item.values.tags.Name,
+                image_name: result.item.values.image_name,
+                availability_zone: result.item.values.availability_zone,
+                system_disk_type: result.item.values.system_disk_type,
+                system_disk_size: result.item.values.system_disk_size,
+                data_disk_type: result.item.values.data_disks[0].type,
+                data_disk_size: result.item.values.data_disks[0].size,
+                password: result.item.values.admin_pass,
+              }
+              this.onFill(values);
               break;
           }
         } else if (res.code !== 0) {

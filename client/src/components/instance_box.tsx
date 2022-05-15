@@ -3,7 +3,6 @@ import { Card, Descriptions, Badge, Button, Divider, message } from 'antd';
 import { InstanceStatus, StatusMap, AwsRegion, AliRegion, HuaweiRegion, AwsInstanceType, AliInstanceType, HuaweiInstanceType, CloudType } from '../common/enum';
 import { ResponseData } from '../common/interface';
 import './instance_box.css';
-import { DetailsView } from '../views/details';
 import { post } from '../api/request';
 import { Urls } from '../api/apis';
 import { Dialog } from './dialog';
@@ -21,10 +20,10 @@ export interface InstanceBoxInfo {
 interface InstanceBoxProps extends InstanceBoxInfo {
   cloudType: CloudType;
   onEditClick: (id: string, instanceKey: string) => void;
+  onSearchClick: (id: string, instanceKey: string) => void;
 }
 
 interface InstanceBoxState {
-  detailsPageVisible: boolean;
   dialogVisible: boolean;
   disableSubmit: boolean;
 }
@@ -46,22 +45,9 @@ export class InstanceBox extends React.Component<InstanceBoxProps, InstanceBoxSt
   constructor(props: InstanceBoxProps) {
     super(props);
     this.state = {
-      detailsPageVisible: false,
       dialogVisible: false,
       disableSubmit: false,
     }
-  }
-
-  closeDetailsDrawer = () => {
-    this.setState({
-      detailsPageVisible: false,
-    })
-  }
-
-  onSearchClick = () => {
-    this.setState({
-      detailsPageVisible: true,
-    })
   }
 
   setDialogVisible(visible: boolean) {
@@ -88,9 +74,9 @@ export class InstanceBox extends React.Component<InstanceBoxProps, InstanceBoxSt
     post(Urls.DestroyResource, { resource_type: cloudType, instance_id: instanceId }).then(data => {
       const res = data as ResponseData;
       if (res.code === 0) {
-        message.success({ content: res.msg, key: msgKey});
+        message.success({ content: res.msg, key: msgKey });
       } else {
-        message.error({ content: res.msg, key: msgKey});
+        message.error({ content: res.msg, key: msgKey });
       }
       this.setDialogVisible(false);
       this.setSubmitBtnDisable(false);
@@ -98,8 +84,8 @@ export class InstanceBox extends React.Component<InstanceBoxProps, InstanceBoxSt
   }
 
   render() {
-    const { instanceId, instanceName, region, publicIp, status, instanceType, image, cloudType, instanceKey, onEditClick } = this.props;
-    const { detailsPageVisible, dialogVisible, disableSubmit } = this.state;
+    const { instanceId, instanceName, region, publicIp, status, instanceType, image, instanceKey, onEditClick, onSearchClick } = this.props;
+    const { dialogVisible, disableSubmit } = this.state;
     return (
       <>
         <div className='instance-box'>
@@ -117,14 +103,12 @@ export class InstanceBox extends React.Component<InstanceBoxProps, InstanceBoxSt
             <div className='instance-box-btns'>
               <Button type="primary" className='instance-box-btn' onClick={this.onDestroyClick}>销毁实例</Button>
               <Button type="primary" className='instance-box-btn' onClick={() => onEditClick(instanceId, instanceKey)}>修改实例信息</Button>
-              <Button type="primary" className='instance-box-btn' onClick={this.onSearchClick}>查看实例详情</Button>
+              <Button type="primary" className='instance-box-btn' onClick={() => onSearchClick(instanceId, instanceKey)}>查看实例详情</Button>
             </div>
           </Card>
         </div>
-        <DetailsView cloudType={cloudType} instanceId={instanceId} visible={detailsPageVisible} onClose={this.closeDetailsDrawer} />
         <Dialog visible={dialogVisible} disableSubmit={disableSubmit} title={'销毁实例'} content={`是否销毁实例 ${instanceId}?`} onConfirm={this.destroyInstance} onClose={() => this.setDialogVisible(false)} />
       </>
     );
   }
-
 }

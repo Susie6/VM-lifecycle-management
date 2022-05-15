@@ -1,6 +1,9 @@
 import React from 'react';
 import { Menu } from 'antd';
-import { AppstoreOutlined, MailOutlined, SettingOutlined } from '@ant-design/icons';
+import { connect } from 'react-redux';
+import { Dispatch } from 'redux';
+import { CloudType } from '../common/enum';
+import { updateCloudTypeAction } from '../store/action';
 
 interface MenuOption {
   key: string; // 导航值
@@ -21,21 +24,30 @@ interface VerticalMenuProps {
   selectedKey: string;
   openKey: string;
   menuItems: MenuItem[];
-  handleMenuClick: (e: any) => void;
+  handleMenuClick: (e: any) => CloudType;
 };
+
+interface VerticalMenuReduxProps {
+  updateCloudType: (type: CloudType) => void;
+}
+
+type VerticalMenuAllProps = VerticalMenuProps & VerticalMenuReduxProps;
 
 interface VerticalMenuState {
   openKeys: string[];
 }
 
-export class VerticalMenu extends React.Component<VerticalMenuProps, VerticalMenuState> {
+class VerticalMenu extends React.Component<VerticalMenuAllProps, VerticalMenuState> {
   public rootSubmenuKeys: string[];
-  constructor(props: VerticalMenuProps) {
+  constructor(props: VerticalMenuAllProps) {
     super(props);
     this.rootSubmenuKeys = [];
   }
-  handleClick() {
 
+  handleClick = (e: any) => {
+    const { handleMenuClick, updateCloudType } = this.props;
+    const cloudType = handleMenuClick(e);
+    updateCloudType(cloudType);
   }
 
   // onOpenChange = (openKeys: string[]) => {
@@ -51,11 +63,11 @@ export class VerticalMenu extends React.Component<VerticalMenuProps, VerticalMen
 
   render() {
     const { SubMenu } = Menu;
-    const { selectedKey, openKey, menuItems, handleMenuClick } = this.props;
+    const { selectedKey, openKey, menuItems } = this.props;
 
     return (
       <Menu
-        onClick={handleMenuClick}
+        onClick={this.handleClick}
         // onOpenChange={this.onOpenChange}
         style={{ width: 256 }}
         defaultSelectedKeys={[selectedKey]}
@@ -82,3 +94,12 @@ export class VerticalMenu extends React.Component<VerticalMenuProps, VerticalMen
     );
   };
 }
+
+const mapDispatchToProps = (dispatch: Dispatch) => {
+  return {
+    updateCloudType: (cloudType: CloudType) => {
+      dispatch(updateCloudTypeAction(cloudType));
+    }
+  }
+}
+export default connect(null, mapDispatchToProps)(VerticalMenu);

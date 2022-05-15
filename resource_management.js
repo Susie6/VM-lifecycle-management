@@ -228,8 +228,10 @@ app.post('/destroyResource', async (request, response) => {
     // module.aws_resources[\"instance_a\"].aws_instance.instance
     const instance_key = info.instance_key;
     console.log("start destroying");
-    const cmd = `${TERRAFORM_COMMANDS.DESTROY} -target "module.${resource_type}_resources[\\"${instance_key}\\"].${resource_type}_instance.instance" --auto-approve`;
+    oldData = await updateResourceInfo(null, resource_type, OPERATION_TYPE.DELETE, instance_key);
+    console.log(oldData);
     // const cmd = `${TERRAFORM_COMMANDS.DESTROY} -target "module.${resource_type}_resources[\\"${instance_key}\\"].${resource_type}_instance.instance" --auto-approve`;
+    const cmd = TERRAFORM_COMMANDS.APPLY;
     const result = await execute(cmd, cmd_path);
     console.log("finish destroying");
     if (result.code === 0) {
@@ -239,7 +241,7 @@ app.post('/destroyResource', async (request, response) => {
         msg: '资源销毁成功！'
       };
       response.send(JSON.stringify(res));
-      oldData = await updateResourceInfo(null, resource_type, OPERATION_TYPE.DELETE, instance_key);
+      // oldData = await updateResourceInfo(null, resource_type, OPERATION_TYPE.DELETE, instance_key);
     } else {
       res = {
         code: 1,
@@ -347,6 +349,8 @@ app.post('/showResourceInfo', async (request, response) => {
     const instance_info = json_data.values ? json_data.values.root_module.child_modules.filter(item => item.address.includes(`${resource_type}_resources`)).map(item => {
       if (resource_type === RESOURCE_TYPE.HUAWEI) {
         item.resources[2].values.public_ip = item.resources[1].values.public_ip;
+      } else if (resource_type === RESOURCE_TYPE.ALI) {
+        return item.resources[0];
       }
       return item.resources[2];
     }) : null;
@@ -530,7 +534,10 @@ async function getInstanceInfo(resource_type, instance_id) {
   } = await execute(TERRAFORM_COMMANDS.SHOW_RESOURCES_INFO, cmd_path);
   if (code === 0) {
     const json_data = JSON.parse(cmd_info);
-    const instance_info = json_data.values.root_module ? json_data.values.root_module.child_modules.filter(item => item.address.includes(`${resource_type}_resources`)).map(item => item.resources[2]) : [];
+    const instance_info = json_data.values.root_module ? json_data.values.root_module.child_modules.filter(item => item.address.includes(`${resource_type}_resources`)).map(item => {
+      if (resource_type === RESOURCE_TYPE.ALI) return item.resources[0];
+      else return item.resources[2];
+    }) : [];
     let res = {
       code: 2,
       info: "该资源尚未创建！"

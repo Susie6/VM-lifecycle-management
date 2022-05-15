@@ -29,6 +29,7 @@ export class ProfileForm extends React.Component<ProfileProps, ProfileState> {
 
   componentWillReceiveProps(nextProps: ProfileProps) {
     this.setSubmitBtnDisable(nextProps.disableSubmit);
+    this.fillStaticProfile();
   }
 
   componentDidMount() {

@@ -6,6 +6,10 @@ import { InstanceForm } from '../components/instance_form';
 import { ProfileForm } from '../components/profile_form';
 import { post } from '../api/request';
 import { Urls } from '../api/apis';
+import { connect } from 'react-redux';
+import { Dispatch } from 'redux';
+import { GlobalState } from '../store/action_type';
+import { setCreateDrawerVisibleAction } from '../store/action';
 import './add_or_edit.css';
 
 interface DrawerProps {
@@ -15,28 +19,23 @@ interface DrawerProps {
   instanceId?: string | null;
   instanceKey?: string | null;
   onClose: () => void;
+  setCreateDrawerVisible: (visible: boolean) => void;
 }
 
 interface DrawerState {
-  visible: boolean;
   current: number;
   disableSubmit: boolean;
 }
 
-export class DrawerView extends React.Component<DrawerProps, DrawerState> {
+class DrawerView extends React.Component<DrawerProps, DrawerState> {
   public region: AwsRegion | AliRegion | HuaweiRegion | null;
   constructor(props: DrawerProps) {
     super(props);
     this.state = {
-      visible: false,
       current: 0,
       disableSubmit: false,
     }
     this.region = null;
-  }
-
-  componentWillReceiveProps(nextProps: DrawerProps) {
-    this.setDrawerVisible(nextProps.visible);
   }
 
   submitProfileForm = (values: StaticProfileForm) => {
@@ -69,11 +68,11 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
   }
 
   submitInstanceForm = (values: HuaweiForm | AwsForm | AliForm) => {
-    const { cloudType, type, instanceKey } = this.props;
+    const { cloudType, type, instanceKey, setCreateDrawerVisible } = this.props;
     this.setSubmitBtnDisable(true);
     if (type === DrawerType.ADD) {
       const msgKey = 'create';
-      message.loading({ content: '正在创建云资源...', key: msgKey, duration: 20 });
+      message.loading({ content: '正在创建云资源，可能需要等待几分钟...', key: msgKey, duration: 60 });
       post(Urls.ApplyResource, { ...values, resource_type: cloudType }).then((data) => {
         const res = data as ResponseData;
         if (res.code === 0) {
@@ -82,7 +81,7 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
             current: 0,
           });
           message.success({ content: res.msg, key: msgKey });
-          this.setDrawerVisible(false);
+          setCreateDrawerVisible(false);
         } else {
           message.error({ content: res.msg, key: msgKey });
           this.setSubmitBtnDisable(false);
@@ -90,7 +89,7 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
       })
     } else {
       const msgKey = 'update';
-      message.loading({ content: '正在升级云资源...', key: msgKey, duration: 20 });
+      message.loading({ content: '正在升级云资源，可能需要等待几分钟...', key: msgKey, duration: 60 });
       post(Urls.UpdateInstanceInfo, { modified_result: values, resource_type: cloudType, instance_key: instanceKey }).then((data) => {
         const res = data as ResponseData;
         if (res.code === 0) {
@@ -98,7 +97,7 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
             current: 0,
           });
           message.success({ content: res.msg, key: msgKey });
-          this.setDrawerVisible(false);
+          setCreateDrawerVisible(false);
         } else {
           message.error({ content: res.msg, key: msgKey });
           this.setSubmitBtnDisable(false);
@@ -113,23 +112,25 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
     })
   }
 
-  setDrawerVisible = (visible: boolean) => {
+  cancelEdit = () => {
+    const { onClose } = this.props;
+    onClose();
     this.setState({
-      visible,
-    });
-  };
+      current: 0,
+    })
+  }
 
   render() {
-    const { type, cloudType, instanceId, onClose } = this.props;
+    const { type, cloudType, instanceId } = this.props;
     const { current, disableSubmit } = this.state;
     const steps = [
       {
         title: `${cloudType} 身份凭证确认`,
-        content: <ProfileForm cloudType={cloudType} onClickCancel={() => this.setDrawerVisible(false)} onClickSubmit={this.submitProfileForm} disableSubmit={disableSubmit} />,
+        content: <ProfileForm cloudType={cloudType} onClickCancel={this.cancelEdit} onClickSubmit={this.submitProfileForm} disableSubmit={disableSubmit} />,
       },
       {
         title: `${cloudType} 实例信息输入`,
-        content: <InstanceForm cloudType={cloudType} drawerType={type} region={this.region} onClickCancel={() => this.setDrawerVisible(false)} onClickSubmit={this.submitInstanceForm} instanceId={instanceId} disableSubmit={disableSubmit} />,
+        content: <InstanceForm cloudType={cloudType} drawerType={type} region={this.region} onClickCancel={this.cancelEdit} onClickSubmit={this.submitInstanceForm} instanceId={instanceId} disableSubmit={disableSubmit} />,
       }
     ];
     return (
@@ -137,8 +138,8 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
         <Drawer
           title={type === DrawerType.ADD ? '创建实例' : '修改实例'}
           width={720}
-          onClose={onClose}
-          visible={this.state.visible}
+          onClose={this.cancelEdit}
+          visible={this.props.visible}
           bodyStyle={{ paddingBottom: 80 }}
         >
           <Steps current={current}>
@@ -152,3 +153,17 @@ export class DrawerView extends React.Component<DrawerProps, DrawerState> {
     );
   }
 }
+
+const mapStateToProps = (state: GlobalState) => ({
+  visible: state.createDrawerVisible,
+})
+
+const mapDispatchToProps = (dispatch: Dispatch) => {
+  return {
+    setCreateDrawerVisible: (visible: boolean) => {
+      dispatch(setCreateDrawerVisibleAction(visible));
+    },
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(DrawerView);

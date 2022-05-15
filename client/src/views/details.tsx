@@ -4,16 +4,19 @@ import { CloudType } from '../common/enum';
 import { ResponseData, AwsResult } from '../common/interface';
 import { post } from '../api/request';
 import { Urls } from '../api/apis';
+import { connect } from 'react-redux';
+import { Dispatch } from 'redux';
+import { GlobalState } from '../store/action_type';
+import { setLookupDrawerVisibleAction } from '../store/action';
 
 interface DetailsProps {
   cloudType: CloudType;
-  instanceId: string;
+  instanceId: string | null;
   visible: boolean;
   onClose: () => void;
 }
 
 interface DetailsState {
-  visible: boolean;
   InstanceInfo: AwsResult | null;
 }
 
@@ -22,42 +25,33 @@ interface ListData {
   value: string | number | undefined | string[];
 }
 
-export class DetailsView extends React.Component<DetailsProps, DetailsState> {
+class DetailsView extends React.Component<DetailsProps, DetailsState> {
   constructor(props: DetailsProps) {
     super(props);
     this.state = {
-      visible: false,
       InstanceInfo: null,
     }
   }
 
-  componentDidMount() {
-    this.getInstanceInfo();
-  }
-
   componentWillReceiveProps(nextProps: DetailsProps) {
-    this.setDrawerVisible(nextProps.visible);
     nextProps.visible && this.getInstanceInfo();
   }
 
-  setDrawerVisible = (visible: boolean) => {
-    this.setState({
-      visible,
-    });
-  };
-
   getInstanceInfo() {
     const { cloudType, instanceId } = this.props;
-    post(Urls.ShowSingleResource, { resource_type: cloudType, instance_id: instanceId }).then(data => {
-      const res = data as ResponseData;
-      if (res.code === 0) {
-        this.setState({
-          InstanceInfo: res.result,
-        })
-      } else {
-        message.error({ content: res.msg });
-      }
-    });
+    if (instanceId) {
+      post(Urls.ShowSingleResource, { resource_type: cloudType, instance_id: instanceId }).then(data => {
+        const res = data as ResponseData;
+        if (res.code === 0) {
+          this.setState({
+            InstanceInfo: res.result,
+          })
+        } else {
+          message.error({ content: res.msg });
+        }
+      });
+    }
+
   }
 
   getListData(): ListData[] {
@@ -109,14 +103,19 @@ export class DetailsView extends React.Component<DetailsProps, DetailsState> {
   }
 
   render() {
-    const { onClose } = this.props;
+    const { visible, onClose } = this.props;
     const data = this.getListData();
     return (
       <Drawer
         title='查看资源详情'
         width={720}
-        onClose={onClose}
-        visible={this.state.visible}
+        onClose={() => {
+          onClose();
+          this.setState({
+            InstanceInfo: null,
+          })
+        }}
+        visible={visible}
         bodyStyle={{ paddingBottom: 80 }}
       >
         <List
@@ -134,3 +133,17 @@ export class DetailsView extends React.Component<DetailsProps, DetailsState> {
     );
   }
 }
+
+const mapStateToProps = (state: GlobalState) => ({
+  visible: state.lookupDrawerVisible,
+})
+
+const mapDispatchToProps = (dispatch: Dispatch) => {
+  return {
+    setCreateDrawerVisible: (visible: boolean) => {
+      dispatch(setLookupDrawerVisibleAction(visible));
+    },
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(DetailsView);
