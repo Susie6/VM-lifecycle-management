@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Button, Input, Select, message, Spin } from 'antd';
+import { Form, Button, Input, Select, message, Spin, InputNumber } from 'antd';
 import {
   DrawerType,
   CloudType,
@@ -14,7 +14,8 @@ import {
   AliRegion,
   HuaweiRegion,
   HuaweiSystemDiskType,
-  HuaweiDataDiskType
+  HuaweiDataDiskType,
+  HuaweiImageName,
 } from '../common/enum';
 import { HuaweiForm, AliForm, AwsForm } from '../common/interface';
 import { FormInstance } from 'antd/lib/form';
@@ -142,6 +143,11 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
     }
   }
 
+  renderHuaweiImageOptions() {
+    const options = Object.values(HuaweiImageName);
+    return options.map(op => <Select.Option value={op}>{op}</Select.Option>);
+  }
+
   setLoadingStatus = (loading: boolean) => {
     this.setState({
       loading,
@@ -157,7 +163,7 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
           <Form
             layout="horizontal"
             requiredMark={true}
-            labelCol={{ span: 8 }}
+            labelCol={{ span: 5 }}
             wrapperCol={{ span: 16 }}
             initialValues={{ remember: true }}
             ref={this.formRef}
@@ -227,9 +233,10 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
             <Form.Item
               label="system_disk_size"
               name="system_disk_size"
+              extra={<p>提示：大小范围在 40 - 1024 之间</p>}
               rules={[{ required: true, message: '请输入system_disk_size!' }]}
             >
-              <Input />
+              <InputNumber min={40} max={1024} addonAfter={"G"} />
             </Form.Item>
             <Form.Item
               label="data_disk_category"
@@ -263,7 +270,15 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
             <Form.Item
               label="data_disk_size"
               name="data_disk_size"
+              extra={<p>提示：大小范围在 40 - 1024 之间</p>}
               rules={[{ required: true, message: '请输入data_disk_size!' }]}
+            >
+              <InputNumber min={40} max={1024} addonAfter={"G"} />
+            </Form.Item>
+            <Form.Item
+              label="实例密码"
+              name="password"
+              rules={[{ required: true, message: '请输入实例密码!' }]}
             >
               <Input />
             </Form.Item>
@@ -290,7 +305,7 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
           <Form
             layout="horizontal"
             requiredMark={true}
-            labelCol={{ span: 8 }}
+            labelCol={{ span: 5 }}
             wrapperCol={{ span: 16 }}
             initialValues={{ remember: true }}
             ref={this.formRef}
@@ -357,7 +372,7 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
           <Form
             layout="horizontal"
             requiredMark={true}
-            labelCol={{ span: 8 }}
+            labelCol={{ span: 5 }}
             wrapperCol={{ span: 16 }}
             initialValues={{ remember: true }}
             ref={this.formRef}
@@ -399,7 +414,12 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
               name="image_name"
               rules={[{ required: true, message: '请输入image_name!' }]}
             >
-              <Input />
+              <Select
+                placeholder="请选择可用鏡像"
+                allowClear
+              >
+                {this.renderHuaweiImageOptions()}
+              </Select>
             </Form.Item>
             <Form.Item
               label="system_disk_type"
@@ -419,9 +439,10 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
             <Form.Item
               label="system_disk_size"
               name="system_disk_size"
+              extra={<p>提示：大小范围在 40 - 1024 之间</p>}
               rules={[{ required: true, message: '请输入system_disk_size!' }]}
             >
-              <Input />
+              <InputNumber min={40} max={1024} addonAfter={"G"} />
             </Form.Item>
             <Form.Item
               label="data_disk_type"
@@ -441,7 +462,15 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
             <Form.Item
               label="data_disk_size"
               name="data_disk_size"
+              extra={<p>提示：大小范围在 40 - 1024 之间</p>}
               rules={[{ required: true, message: '请输入data_disk_size!' }]}
+            >
+              <InputNumber min={40} max={1024} addonAfter={"G"} />
+            </Form.Item>
+            <Form.Item
+              label="实例密码"
+              name="password"
+              rules={[{ required: true, message: '请输入实例密码!' }]}
             >
               <Input />
             </Form.Item>

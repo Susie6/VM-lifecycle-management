@@ -1,4 +1,10 @@
 const express = require('express');
+const app = express();
+app.post('/path', (request, response) => {
+  response.send("hello");
+});
+
+
 const {
   exec
 } = require('child_process');

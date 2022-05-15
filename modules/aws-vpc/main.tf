@@ -18,10 +18,11 @@ resource "aws_security_group" "aws_sec_group" {
 
   // To Allow SSH Transport
   ingress {
-    from_port   = 80
-    protocol    = "tcp"
-    to_port     = 80
-    cidr_blocks = [aws_vpc.vpc.cidr_block]
+    from_port   = 0
+    protocol    = "-1"
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks=["::/0"]
   }
 
   egress {
@@ -29,6 +30,11 @@ resource "aws_security_group" "aws_sec_group" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks=["::/0"]
+  }
+
+  tags {
+    Name = "allow_all_access"
   }
 
   lifecycle {
@@ -36,7 +42,7 @@ resource "aws_security_group" "aws_sec_group" {
   }
 }
 
-#创建internet网关，别名test，并附加到VPC
+#创建internet网关，并附加到VPC
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.vpc.id
   lifecycle {

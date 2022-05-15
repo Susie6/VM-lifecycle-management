@@ -1,16 +1,3 @@
-# variable "access_key" {
-#   type = string
-# }
-
-# variable "secret_key" {
-#   type = string
-# }
-
-# variable "region" {
-#   type = string
-#   # https://developer.huaweicloud.com/endpoint
-# }
-
 variable "availability_zone" {
   type = string
 }
@@ -71,4 +58,8 @@ variable "image_name" {
   default = "Ubuntu 18.04 server 64bit"
   # option: "Ubuntu 16.04 server 64bit" "Ubuntu 18.04 server 64bit" "Ubuntu 20.04 server 64bit"
   # "CentOS 7.6 64bit"  6.5 6.8 - 6.10 7.2 - 8.2
+}
+
+variable "password" {
+  type = string
 }

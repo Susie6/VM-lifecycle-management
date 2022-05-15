@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    alicloud = {
+      source  = "local-registry/aliyun/alicloud"
+      version = "1.164.0"
+    }
+  }
+}
+
 data "alicloud_zones" "default" {
   available_disk_category     = "cloud_efficiency"
   available_resource_creation = "VSwitch"
@@ -15,7 +24,7 @@ resource "alicloud_vswitch" "vsw" {
   vswitch_name = "alicloud_vswitch_default"
   vpc_id       = alicloud_vpc.vpc.id
   cidr_block   = "172.16.0.0/24"
-  zone_id      = data.alicloud_zones.default.zones[0].id
+  zone_id      = var.availability_zone
 }
 
 # Create security group

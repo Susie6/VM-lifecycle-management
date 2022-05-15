@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Link, BrowserRouter as Router } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { CloudType } from '../common/enum';
 import { HomePage } from '../views/home';
 import { InstanceView } from '../views/instance_view';

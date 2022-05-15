@@ -1,8 +1,8 @@
 terraform {
   required_providers {
     alicloud = {
-      source  = "aliyun/alicloud"
-      version = "1.166.0"
+      source  = "local-registry/aliyun/alicloud"
+      version = "1.164.0"
     }
   }
 }
@@ -14,7 +14,8 @@ provider "alicloud" {
 }
 
 module "ali_vpc" {
-  source = "../modules/ali-vpc"
+  source            = "../modules/ali-vpc"
+  availability_zone = var.ali_input.availability_zone
 }
 
 module "ali_resources" {
@@ -32,6 +33,7 @@ module "ali_resources" {
   data_disk_name          = each.value.data_disk_name
   data_disk_size          = each.value.data_disk_size
   data_disk_description   = each.value.data_disk_description
+  password                = each.value.password
 
   secgroup_id = module.ali_vpc.alicloud_security_group_id
   vswitch_id  = module.ali_vpc.alicloud_vswitch_id

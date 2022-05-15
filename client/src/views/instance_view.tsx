@@ -1,12 +1,12 @@
 import React from 'react';
-import { CloudType, AwsRegion, DrawerType, AliRegion, HuaweiRegion } from '../common/enum';
+import { CloudType, AwsRegion, DrawerType, AliRegion, HuaweiRegion, InstanceStatus } from '../common/enum';
 import { NumberBox } from '../components/number_box';
 import { InstanceBox, InstanceBoxInfo } from '../components/instance_box';
 import { Toolbar } from '../components/toolbar';
 import { EmptyView } from '../components/empty';
 import { BoxInfo } from '../common/interface';
 import { DrawerView } from './add_or_edit';
-import { ResponseData, AwsResultItem } from '../common/interface';
+import { ResponseData, AwsResultItem, HuaweiResultItem, AliResultItem } from '../common/interface';
 import { post } from '../api/request';
 import { Urls } from '../api/apis';
 import { getInstanceKey } from '../utils/utils';
@@ -122,33 +122,74 @@ export class InstanceView extends React.Component<InstanceViewProps, InstanceVie
       const res = data as ResponseData;
       if (res.code === 0) {
         let arr: InstanceBoxInfo[] = [];
+        let result;
         if (res.result) {
           switch (cloudType) {
             case CloudType.AWS:
-              const result = res.result as AwsResultItem[];
+              result = res.result as AwsResultItem[];
               result.forEach(item => {
-                const key = getInstanceKey(item.address);
-                arr.push({
-                  instanceKey: key,
-                  instanceId: item.values.id,
-                  instanceName: item.values.tags.Name,
-                  region: this.region,
-                  publicIp: item.values.public_ip,
-                  status: item.values.instance_state,
-                  instanceType: item.values.instance_type,
-                  image: item.values.ami,
-                })
+                if (item) {
+                  const key = getInstanceKey(item.address);
+                  arr.push({
+                    instanceKey: key,
+                    instanceId: item.values.id,
+                    instanceName: item.values.tags.Name,
+                    region: this.region,
+                    publicIp: item.values.public_ip,
+                    status: item.values.instance_state,
+                    instanceType: item.values.instance_type,
+                    image: item.values.ami,
+                  })
+                }
               });
               break;
             case CloudType.ALI:
               console.log(res.result);
+              result = res.result as AliResultItem[];
+              result.forEach(item => {
+                if (item) {
+                  const key = getInstanceKey(item.address);
+                  arr.push({
+                    instanceKey: key,
+                    instanceId: item.values.id,
+                    instanceName: item.values.tags.Name,
+                    region: this.region,
+                    publicIp: item.values.public_ip,
+                    status: item.values.status,
+                    instanceType: item.values.instance_type,
+                    image: item.values.image_id,
+                  })
+                }
+              });
               break;
             case CloudType.HUAWEI:
+              result = res.result as HuaweiResultItem[];
+              result.forEach(item => {
+                if (item) {
+                  const key = getInstanceKey(item.address);
+                  arr.push({
+                    instanceKey: key,
+                    instanceId: item.values.id,
+                    instanceName: item.values.tags.Name,
+                    region: this.region,
+                    publicIp: item.values.public_ip ? item.values.public_ip : "",
+                    status: item.values.status === "ACTIVE" ? InstanceStatus.Running : InstanceStatus.Stopped,
+                    instanceType: item.values.flavor_id,
+                    image: item.values.image_id,
+                  })
+                }
+              });
               break;
           }
-          this.setState({
-            InstanceList: arr,
-          });
+          if (arr.length > 0) {
+            this.setState({
+              InstanceList: arr,
+            });
+          } else {
+            this.setState({
+              InstanceList: null,
+            })
+          }
         }
       }
     });

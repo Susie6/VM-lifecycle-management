@@ -1,8 +1,8 @@
 terraform {
   required_providers {
     huaweicloud = {
-      source  = "huaweicloud/huaweicloud"
-      version = "~> 1.26.0"
+      source  = "local-registry/huaweicloud/huaweicloud"
+      version = "1.35.2"
     }
   }
 }
@@ -18,7 +18,7 @@ module "huawei_vpc" {
 }
 
 module "huawei_resources" {
-  source   = "../modules/huawei-cloud-module"
+  source = "../modules/huawei-cloud-module"
   for_each = var.huawei_input.list_result
 
   availability_zone = var.huawei_input.availability_zone
@@ -29,6 +29,7 @@ module "huawei_resources" {
   data_disk_type    = each.value.data_disk_type
   data_disk_size    = each.value.data_disk_size
   image_name        = each.value.image_name
+  password          = each.value.password
 
   subnet_id   = module.huawei_vpc.subnet_id
   secgroup_id = module.huawei_vpc.secgroup_id

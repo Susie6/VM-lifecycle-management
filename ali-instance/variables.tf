@@ -15,7 +15,7 @@ variable "ali_input" {
       data_disk_name          = string
       data_disk_size          = number
       data_disk_description   = string
+      password                = string
     }))
-
   })
 }

@@ -13,6 +13,9 @@ export enum InstanceStatus {
   Running = 'running',
   Stopped = 'stopped',
   Terminated = 'terminated',
+  RunningX = 'Running',
+  StoppedX = 'Stopped',
+  TerminatedX = 'Terminated',
 }
 
 export enum StatusBadge {
@@ -23,8 +26,11 @@ export enum StatusBadge {
 
 export const StatusMap = {
   [InstanceStatus.Running]: StatusBadge.Running,
+  [InstanceStatus.RunningX]: StatusBadge.Running,
   [InstanceStatus.Stopped]: StatusBadge.Stopped,
+  [InstanceStatus.StoppedX]: StatusBadge.Stopped,
   [InstanceStatus.Terminated]: StatusBadge.Terminated,
+  [InstanceStatus.TerminatedX]: StatusBadge.Terminated,
 }
 
 export enum AwsRegion {
@@ -101,13 +107,22 @@ export enum AliInstanceType {
 }
 
 export enum HuaweiInstanceType {
-  // s7.small.1 s7.medium.2 s7.xlarge.2 s7.2xlarge.2 s7.medium.4 s7.large.4 s7.xlarge.4 s7.2xlarge.4
-  S7_SMALL = 's7.small.1', // 1 1
-  S7_MEDIUM = 's7.medium.2', // 1 2
-  S7_Large = 's7.large.2', // 2 4
-  S6_SMALL = 's6.small.1', // 1 1
-  S6_MEDIUM = 's6.medium.2', // 1 2
-  S6_Large = 's6.large.2', // 2 4
+  S2_SMALL = 's2.small.1', // 1 1
+  S2_MEDIUM = 's2.medium.2', // 1 2
+  S2_Large = 's2.large.2', // 2 4
+  S3_SMALL = 's3.small.1', // 1 1
+  S3_MEDIUM = 's3.medium.2', // 1 2
+  S3_Large = 's3.large.2', // 2 4
+}
+
+export enum HuaweiImageName {
+  // option: "Ubuntu 16.04 server 64bit" "Ubuntu 18.04 server 64bit" "Ubuntu 20.04 server 64bit"
+  // "CentOS 7.6 64bit"  6.5 6.8 - 6.10 7.2 - 8.2
+  Ubuntu16 = "Ubuntu 16.04 server 64bit",
+  Ubuntu18 = "Ubuntu 18.04 server 64bit",
+  Ubuntu20 = "Ubuntu 20.04 server 64bit",
+  CentOS72 = "CentOS 7.2 64bit",
+  CentOS76 = "CentOS 7.6 64bit",
 }
 
 export enum DrawerType {
@@ -117,10 +132,10 @@ export enum DrawerType {
 
 export enum DiskCategory {
   //ephemeral_ssd, cloud_efficiency, cloud_ssd, cloud_essd
-  Cloud_Efficiency = ' cloud_efficiency',
+  Cloud_Efficiency = 'cloud_efficiency',
   Ephemeral_Ssd = 'ephemeral_ssd',
-  Cloud_Ssd = ' cloud_ssd',
-  Cloud_Essd = ' cloud_essd',
+  Cloud_Ssd = 'cloud_ssd',
+  Cloud_Essd = 'cloud_essd',
 }
 
 export enum HuaweiSystemDiskType {

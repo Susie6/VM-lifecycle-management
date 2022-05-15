@@ -133,7 +133,6 @@ app.post('/staticProfile', async (request, response) => {
       msg: '静态凭证无效，详情请查看报错信息！'
     }
     response.send(JSON.stringify(res));
-    await toJson(json_path, oldData, resource_type);
   }
 });
 
@@ -163,6 +162,7 @@ app.post('/applyResource', async (request, response) => {
       data_disk_name: request.body.data_disk_name,
       data_disk_description: request.body.data_disk_description,
       data_disk_size: request.body.data_disk_size,
+      password: request.body.password,
       // status: request.body.status
     };
   } else if (resource_type === RESOURCE_TYPE.HUAWEI) {
@@ -175,6 +175,7 @@ app.post('/applyResource', async (request, response) => {
       system_disk_size: request.body.system_disk_size,
       data_disk_type: request.body.data_disk_type,
       data_disk_size: request.body.data_disk_size,
+      password: request.body.password
     };
   }
   const key = generateUniqueId();
@@ -228,6 +229,7 @@ app.post('/destroyResource', async (request, response) => {
     const instance_key = info.instance_key;
     console.log("start destroying");
     const cmd = `${TERRAFORM_COMMANDS.DESTROY} -target "module.${resource_type}_resources[\\"${instance_key}\\"].${resource_type}_instance.instance" --auto-approve`;
+    // const cmd = `${TERRAFORM_COMMANDS.DESTROY} -target "module.${resource_type}_resources[\\"${instance_key}\\"].${resource_type}_instance.instance" --auto-approve`;
     const result = await execute(cmd, cmd_path);
     console.log("finish destroying");
     if (result.code === 0) {
@@ -342,7 +344,12 @@ app.post('/showResourceInfo', async (request, response) => {
   } = await execute(TERRAFORM_COMMANDS.SHOW_RESOURCES_INFO, cmd_path);
   if (code === 0) {
     const json_data = JSON.parse(cmd_info);
-    const instance_info = json_data.values ? json_data.values.root_module.child_modules.filter(item => item.address.includes(`${resource_type}_resources`)).map(item => item.resources[2]) : null;
+    const instance_info = json_data.values ? json_data.values.root_module.child_modules.filter(item => item.address.includes(`${resource_type}_resources`)).map(item => {
+      if (resource_type === RESOURCE_TYPE.HUAWEI) {
+        item.resources[2].values.public_ip = item.resources[1].values.public_ip;
+      }
+      return item.resources[2];
+    }) : null;
     // const instance_info = null;
     const res = {
       code,
@@ -529,7 +536,7 @@ async function getInstanceInfo(resource_type, instance_id) {
       info: "该资源尚未创建！"
     };
     instance_info.forEach(item => {
-      if (item.values.id === instance_id) {
+      if (item && item.values.id === instance_id) {
         const key = getInstanceKey(item.address);
         res = {
           code,

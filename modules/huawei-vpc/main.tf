@@ -1,5 +1,14 @@
+terraform {
+  required_providers {
+    huaweicloud = {
+      source  = "local-registry/huaweicloud/huaweicloud"
+      version = "1.35.2"
+    }
+  }
+}
+
 data "huaweicloud_vpc_subnet" "mynet" {
-  id = var.subnet_id
+  id = huaweicloud_vpc_subnet.subnet.id
 }
 
 resource "huaweicloud_vpc" "vpc" {

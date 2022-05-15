@@ -6,6 +6,7 @@ terraform.tfvars
 terraform.tfvars.json
 test.js
 test.json
+test_huawei.json
 node_modules/
 /.vscode
 package.json

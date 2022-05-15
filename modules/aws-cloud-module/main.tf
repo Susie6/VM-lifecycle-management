@@ -13,9 +13,6 @@ resource "aws_instance" "instance" {
     Name = var.instance_name
   }
 
-  # credit_specification {
-  #   cpu_credits = "unlimited"
-  # }
 }
 
 resource "aws_eip" "eip_resource" {

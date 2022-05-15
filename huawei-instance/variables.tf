@@ -12,6 +12,8 @@ variable "huawei_input" {
       data_disk_type   = string
       data_disk_size   = number
       image_name       = string
+      password         = string
     }))
   })
 }
+# https://developer.huaweicloud.com/endpoint
