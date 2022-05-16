@@ -11,4 +11,5 @@ export const Urls: UrlDict = {
   UpdateInstanceInfo: 'http://127.0.0.1:8000/updateInstanceInfo',
   ShowResourceInfo: 'http://127.0.0.1:8000/showResourceInfo',
   ShowRegion: 'http://127.0.0.1:8000/showRegion',
+  ShowVPC: 'http://127.0.0.1:8000/vpcGroup',
 };

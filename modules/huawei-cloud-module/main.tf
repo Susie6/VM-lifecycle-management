@@ -1,9 +1,4 @@
 // https://registry.terraform.io/providers/huaweicloud/huaweicloud/latest/docs/resources/compute_instance
-
-# data "huaweicloud_vpc_subnet" "mynet" {
-#   id = var.subnet_id
-# }
-
 terraform {
   required_providers {
     huaweicloud = {

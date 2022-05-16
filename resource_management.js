@@ -147,7 +147,7 @@ app.post('/applyResource', async (request, response) => {
       instance_type: request.body.instance_type,
       instance_name: request.body.instance_name,
       ami_id: request.body.ami_id,
-      availability_zone: request.body.availability_zone,
+      // availability_zone: request.body.availability_zone,
     };
   } else if (resource_type === RESOURCE_TYPE.ALI) {
     newData = {
@@ -567,6 +567,159 @@ async function getInstanceInfo(resource_type, instance_id) {
       info: cmd_info
     };
   }
+}
+
+app.post('/vpcGroup', async function (request, response) {
+  const {
+    resource_type
+  } = request.body;
+  const cmd_path = `${resource_type}-instance`;
+  const {
+    code,
+    cmd_info
+  } = await execute(TERRAFORM_COMMANDS.SHOW_RESOURCES_INFO, cmd_path);
+  let res;
+  if (code === 0) {
+    const json_data = JSON.parse(cmd_info);
+    let result = null;
+    const group = json_data.values.root_module ? json_data.values.root_module.child_modules.filter(item => item.address.includes(`${resource_type}_vpc`)) : null;
+    if (group) {
+      result = getVPCGroupInfo(group);
+    }
+    res = {
+      code,
+      command_error: null,
+      msg: 'VPC资源组信息查看成功！',
+      result,
+    };
+    response.send(JSON.stringify(res));
+  } else {
+    res = {
+      code,
+      command_error: cmd_info,
+      msg: 'VPC资源组信息查看失败！',
+      result,
+    };
+    response.send(JSON.stringify(res));
+  }
+});
+
+const VPC_GROUP_RESOURCE = {
+  VPC: 'vpc',
+  SUBNET: 'subnet',
+  SEC_GROUP: 'security_group',
+  SEC_GROUP_RULE: 'security_group_rule',
+  VSWITCH: 'vswitch',
+  HUAWEI_SUBNET: 'huaweicloud_vpc_subnet',
+  HUAWEI_VPC: 'huaweicloud_vpc',
+  HUAWEI_SEC_GROUP: 'huaweicloud_networking_secgroup',
+}
+
+function getVPCGroupInfo(resource_type, group) {
+  let result = null;
+  if (resource_type === RESOURCE_TYPE.AWS) {
+    group.forEach(item => {
+      if (item.type.includes(VPC_GROUP_RESOURCE.SEC_GROUP)) {
+        result[VPC_GROUP_RESOURCE.SEC_GROUP] = {};
+        result[VPC_GROUP_RESOURCE.SEC_GROUP].id = item.values.id;
+        result[VPC_GROUP_RESOURCE.SEC_GROUP].name = item.values.name;
+        result[VPC_GROUP_RESOURCE.SEC_GROUP].vpc_id = item.values.vpc_id;
+        result[VPC_GROUP_RESOURCE.SEC_GROUP].ingress = {
+          cidr_blocks: item.values.ingress[0].cidr_blocks,
+          protocol: item.values.ingress[0].protocol,
+          from_port: item.values.ingress[0].from_port,
+          to_port: item.values.ingress[0].to_port,
+        };
+        result[VPC_GROUP_RESOURCE.SEC_GROUP].egress = {
+          cidr_blocks: item.values.egress[0].cidr_blocks,
+          protocol: item.values.egress[0].protocol,
+          from_port: item.values.egress[0].from_port,
+          to_port: item.values.egress[0].to_port,
+        };
+      } else if (item.type.includes(VPC_GROUP_RESOURCE.SUBNET)) {
+        result[VPC_GROUP_RESOURCE.SUBNET] = {};
+        result[VPC_GROUP_RESOURCE.SUBNET].id = item.values.id;
+        result[VPC_GROUP_RESOURCE.SUBNET].availability_zone = item.values.availability_zone;
+        result[VPC_GROUP_RESOURCE.SUBNET].cidr_blocks = item.values.cidr_blocks;
+        result[VPC_GROUP_RESOURCE.SUBNET].name = item.values.tags.Name;
+        result[VPC_GROUP_RESOURCE.SUBNET].vpc_id = item.values.vpc_id;
+      } else if (item.type.includes(VPC_GROUP_RESOURCE.VPC)) {
+        result[VPC_GROUP_RESOURCE.VPC] = {};
+        result[VPC_GROUP_RESOURCE.VPC].id = item.values.id;
+        result[VPC_GROUP_RESOURCE.VPC].name = item.values.tags.Name;
+        result[VPC_GROUP_RESOURCE.VPC].cidr_blocks = item.values.cidr_blocks;
+      }
+    })
+  } else if (resource_type === RESOURCE_TYPE.ALI) {
+    group.forEach(item => {
+      if (item.type === `${resource_type}_${VPC_GROUP_RESOURCE.SEC_GROUP}`) {
+        result[VPC_GROUP_RESOURCE.SEC_GROUP] = {};
+        result[VPC_GROUP_RESOURCE.SEC_GROUP].id = item.values.id;
+        result[VPC_GROUP_RESOURCE.SEC_GROUP].name = item.values.name;
+        result[VPC_GROUP_RESOURCE.SEC_GROUP].vpc_id = item.values.vpc_id;
+      } else if (item.type === `${resource_type}_${VPC_GROUP_RESOURCE.SEC_GROUP_RULE}`) {
+        result[VPC_GROUP_RESOURCE.SEC_GROUP_RULE] = {};
+        result[VPC_GROUP_RESOURCE.SEC_GROUP_RULE].id = item.values.id;
+        result[VPC_GROUP_RESOURCE.SEC_GROUP_RULE].cidr_ip = item.values.cidr_ip;
+        result[VPC_GROUP_RESOURCE.SEC_GROUP_RULE].ip_protocol = item.values.ip_protocol;
+        result[VPC_GROUP_RESOURCE.SEC_GROUP_RULE].policy = item.values.policy;
+        result[VPC_GROUP_RESOURCE.SEC_GROUP_RULE].port_range = item.values.port_range;
+        result[VPC_GROUP_RESOURCE.SEC_GROUP_RULE].security_group_id = item.values.security_group_id;
+        result[VPC_GROUP_RESOURCE.SEC_GROUP_RULE].type = item.values.type;
+      } else if (item.type === `${resource_type}_${VPC_GROUP_RESOURCE.VPC}`) {
+        result[VPC_GROUP_RESOURCE.VPC] = {};
+        result[VPC_GROUP_RESOURCE.VPC].id = item.values.id;
+        result[VPC_GROUP_RESOURCE.VPC].name = item.values.name;
+        result[VPC_GROUP_RESOURCE.VPC].cidr_block = item.values.cidr_block;
+        result[VPC_GROUP_RESOURCE.VPC].status = item.values.status;
+
+      } else if (item.type === `${resource_type}_${VPC_GROUP_RESOURCE.VSWITCH}`) {
+        result[VPC_GROUP_RESOURCE.VSWITCH] = {};
+        result[VPC_GROUP_RESOURCE.VSWITCH].id = item.values.id;
+        result[VPC_GROUP_RESOURCE.VSWITCH].name = item.values.name;
+        result[VPC_GROUP_RESOURCE.VSWITCH].availability_zone = item.values.availability_zone;
+        result[VPC_GROUP_RESOURCE.VSWITCH].vpc_id = item.values.vpc_id;
+        result[VPC_GROUP_RESOURCE.VSWITCH].cidr_block = item.values.cidr_block;
+        result[VPC_GROUP_RESOURCE.VSWITCH].status = item.values.status;
+      }
+    });
+  } else if (resource_type === RESOURCE_TYPE.HUAWEI) {
+    group.forEach(item => {
+      if (item.type === HUAWEI_SUBNET && item.address.includes('data')) {
+        result[VPC_GROUP_RESOURCE.SUBNET] = {};
+        result[VPC_GROUP_RESOURCE.SUBNET].subnet_id = item.values.subnet_id;
+        result[VPC_GROUP_RESOURCE.SUBNET].region = item.values.region;
+        result[VPC_GROUP_RESOURCE.SUBNET].availability_zone = item.values.availability_zone;
+        result[VPC_GROUP_RESOURCE.SUBNET].cidr = item.values.cidr;
+        result[VPC_GROUP_RESOURCE.SUBNET].name = item.values.name;
+        result[VPC_GROUP_RESOURCE.SUBNET].vpc_id = item.values.vpc_id;
+        result[VPC_GROUP_RESOURCE.SUBNET].gateway_ip = item.values.gateway_ip;
+        result[VPC_GROUP_RESOURCE.SUBNET].status = item.values.status;
+      } else if (item.type === HUAWEI_SEC_GROUP) {
+        result[VPC_GROUP_RESOURCE.SEC_GROUP] = {};
+        result[VPC_GROUP_RESOURCE.SEC_GROUP].id = item.values.id;
+        result[VPC_GROUP_RESOURCE.SEC_GROUP].name = item.values.name;
+        result[VPC_GROUP_RESOURCE.SEC_GROUP].vpc_id = item.values.vpc_id;
+        result[VPC_GROUP_RESOURCE.SEC_GROUP].region = item.values.region;
+        result[VPC_GROUP_RESOURCE.SEC_GROUP].rule = {
+          direction: item.values.rules[0].direction,
+          ethertype: item.values.rules[0].ethertype,
+          port_range_max: item.values.rules[0].port_range_max,
+          port_range_min: item.values.rules[0].port_range_min,
+          ports: item.values.rules[0].ports,
+          protocol: item.values.rules[0].protocol,
+        };
+      } else if (item.type === HUAWEI_VPC) {
+        result[VPC_GROUP_RESOURCE.VPC] = {};
+        result[VPC_GROUP_RESOURCE.VPC].id = item.values.id;
+        result[VPC_GROUP_RESOURCE.VPC].cidr = item.values.cidr;
+        result[VPC_GROUP_RESOURCE.VPC].name = item.values.name;
+        result[VPC_GROUP_RESOURCE.VPC].region = item.values.region;
+        result[VPC_GROUP_RESOURCE.VPC].status = item.values.status;
+      }
+    });
+  }
+  return result;
 }
 
 app.listen(8000, () => {

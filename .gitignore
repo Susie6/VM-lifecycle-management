@@ -5,6 +5,7 @@ terraform.tfstate.backup
 terraform.tfvars
 terraform.tfvars.json
 test.js
+testh.json
 test.json
 test_huawei.json
 node_modules/

@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
 import { CloudType } from '../common/enum';
 import { updateCloudTypeAction } from '../store/action';
+import { store } from '../store/store';
 
 interface MenuOption {
   key: string; // 导航值
@@ -48,6 +49,7 @@ class VerticalMenu extends React.Component<VerticalMenuAllProps, VerticalMenuSta
     const { handleMenuClick, updateCloudType } = this.props;
     const cloudType = handleMenuClick(e);
     updateCloudType(cloudType);
+    console.log(store.getState());
   }
 
   // onOpenChange = (openKeys: string[]) => {

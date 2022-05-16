@@ -33,10 +33,6 @@ resource "aws_security_group" "aws_sec_group" {
     ipv6_cidr_blocks=["::/0"]
   }
 
-  tags {
-    Name = "allow_all_access"
-  }
-
   lifecycle {
     create_before_destroy = false
   }
@@ -70,14 +66,13 @@ resource "aws_route_table" "a_public" {
   #指定所属的VPC
   vpc_id = aws_vpc.vpc.id
   #绑定internet gateway，并绑定到0.0.0.0/0
+  tags = {
+    Name = "route_table_default"
+  }
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.test.id
   }
-}
-
-resource "aws_route_table" "a_private" {
-  vpc_id = aws_vpc.vpc.id
 }
 
 #关联子网和路由表

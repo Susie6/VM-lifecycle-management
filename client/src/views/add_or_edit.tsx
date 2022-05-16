@@ -135,7 +135,7 @@ class DrawerView extends React.Component<DrawerProps, DrawerState> {
       <div>
         <Drawer
           title={type === DrawerType.ADD ? '创建实例' : '修改实例'}
-          width={720}
+          width={1000}
           onClose={this.cancelEdit}
           visible={this.props.visible}
           bodyStyle={{ paddingBottom: 80 }}

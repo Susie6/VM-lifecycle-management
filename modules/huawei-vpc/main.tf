@@ -18,10 +18,11 @@ resource "huaweicloud_vpc" "vpc" {
 
 // https://support.huaweicloud.com/usermanual-terraform/terraform-usermanual.pdf
 resource "huaweicloud_vpc_subnet" "subnet" {
-  name       = "huawei_subnet_default"
-  cidr       = "192.168.10.0/24"
-  gateway_ip = "192.168.10.1"
-  vpc_id     = huaweicloud_vpc.vpc.id
+  name              = "huawei_subnet_default"
+  cidr              = "192.168.10.0/24"
+  gateway_ip        = "192.168.10.1"
+  availability_zone = var.availability_zone
+  vpc_id            = huaweicloud_vpc.vpc.id
 }
 
 resource "huaweicloud_networking_secgroup" "secgroup" {

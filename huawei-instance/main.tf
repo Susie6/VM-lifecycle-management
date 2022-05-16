@@ -14,11 +14,12 @@ provider "huaweicloud" {
 }
 
 module "huawei_vpc" {
-  source = "../modules/huawei-vpc"
+  source            = "../modules/huawei-vpc"
+  availability_zone = var.huawei_input.availability_zone
 }
 
 module "huawei_resources" {
-  source = "../modules/huawei-cloud-module"
+  source   = "../modules/huawei-cloud-module"
   for_each = var.huawei_input.list_result
 
   availability_zone = var.huawei_input.availability_zone
