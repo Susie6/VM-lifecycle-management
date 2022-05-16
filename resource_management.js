@@ -535,8 +535,14 @@ async function getInstanceInfo(resource_type, instance_id) {
   if (code === 0) {
     const json_data = JSON.parse(cmd_info);
     const instance_info = json_data.values.root_module ? json_data.values.root_module.child_modules.filter(item => item.address.includes(`${resource_type}_resources`)).map(item => {
-      if (resource_type === RESOURCE_TYPE.ALI) return item.resources[0];
-      else return item.resources[2];
+      if (resource_type === RESOURCE_TYPE.HUAWEI) {
+        item.resources[2].values.public_ip = item.resources[1].values.public_ip;
+        return item.resources[2];
+      } else if (resource_type === RESOURCE_TYPE.ALI) {
+        return item.resources[0];
+      } else {
+        return item.resources[2]
+      };
     }) : [];
     let res = {
       code: 2,

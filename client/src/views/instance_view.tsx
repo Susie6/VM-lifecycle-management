@@ -83,8 +83,11 @@ class InstanceView extends React.Component<InstanceViewProps, InstanceViewState>
   }
 
   getNumberBoxes(): BoxInfo[] {
-    return [{ title: '实例数量', count: 1 },
-    { title: '运行中', count: 1 }]
+    const { instanceList } = this.props;
+    const instanceCount = instanceList ? instanceList.length : 0;
+    const running = instanceList ? instanceList.filter(item => item.status === InstanceStatus.Running).length : 0;
+    return [{ title: '实例数量', count: instanceCount },
+    { title: '运行中', count: running }]
   }
 
   handleAddInstanceClick = () => {
@@ -177,7 +180,7 @@ class InstanceView extends React.Component<InstanceViewProps, InstanceViewState>
                     instanceName: item.values.tags.Name,
                     region: this.region,
                     publicIp: item.values.public_ip,
-                    status: item.values.status,
+                    status: item.values.status === InstanceStatus.RunningX ? InstanceStatus.Running : InstanceStatus.Stopped,
                     instanceType: item.values.instance_type,
                     image: item.values.image_id,
                   })

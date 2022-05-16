@@ -16,6 +16,7 @@ export enum InstanceStatus {
   RunningX = 'Running',
   StoppedX = 'Stopped',
   TerminatedX = 'Terminated',
+  Active = 'ACTIVE',
 }
 
 export enum StatusBadge {
@@ -27,10 +28,21 @@ export enum StatusBadge {
 export const StatusMap = {
   [InstanceStatus.Running]: StatusBadge.Running,
   [InstanceStatus.RunningX]: StatusBadge.Running,
+  [InstanceStatus.Active]: StatusBadge.Running,
   [InstanceStatus.Stopped]: StatusBadge.Stopped,
   [InstanceStatus.StoppedX]: StatusBadge.Stopped,
   [InstanceStatus.Terminated]: StatusBadge.Terminated,
   [InstanceStatus.TerminatedX]: StatusBadge.Terminated,
+}
+
+export const StatsuText = {
+  [InstanceStatus.Running]: '运行中',
+  [InstanceStatus.RunningX]: '运行中',
+  [InstanceStatus.Active]: '运行中',
+  [InstanceStatus.Stopped]: '已停止',
+  [InstanceStatus.StoppedX]: '已停止',
+  [InstanceStatus.Terminated]: '已终止',
+  [InstanceStatus.TerminatedX]: '已终止',
 }
 
 export enum AwsRegion {

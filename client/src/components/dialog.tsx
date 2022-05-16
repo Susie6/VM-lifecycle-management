@@ -56,8 +56,7 @@ export class Dialog extends React.Component<DialogProps, DialogState> {
       <Modal
         title={title}
         visible={isModalVisible}
-        // onOk={this.handleOk}
-        // onCancel={this.handleCancel}
+        onCancel={this.handleCancel}
         footer={[
           <Button type="primary" onClick={this.handleCancel} disabled={disableSubmit}>取消</Button>,
           <Button type="primary" onClick={this.handleOk} disabled={disableSubmit}>确认</Button>

@@ -122,7 +122,7 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
               break;
           }
         } else if (res.code !== 0) {
-          message.error({ content: res.msg });
+          message.error(res.msg);
         }
         this.setLoadingStatus(false);
       });

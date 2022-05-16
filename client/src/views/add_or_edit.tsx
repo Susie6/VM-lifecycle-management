@@ -48,18 +48,17 @@ class DrawerView extends React.Component<DrawerProps, DrawerState> {
       region: values.region,
     }
     this.region = values.region;
-    const msgKey = 'static';
-    message.loading({ content: '正在执行初始化...', key: msgKey, duration: 10 });
+    const loading = message.loading('正在执行初始化...', 0);
     post(Urls.StaticProfile, postData).then((data) => {
       const res = data as ResponseData;
-      console.log(res);
+      loading();
       if (res.code === 0) {
         this.setState({
           current: 1,
         });
-        message.success({ content: res.msg, key: msgKey });
+        message.success(res.msg);
       } else {
-        message.error({ content: res.msg, key: msgKey });
+        message.error(res.msg);
       }
       this.setSubmitBtnDisable(false);
     }).catch(err => {
@@ -71,35 +70,34 @@ class DrawerView extends React.Component<DrawerProps, DrawerState> {
     const { cloudType, type, instanceKey, setCreateDrawerVisible } = this.props;
     this.setSubmitBtnDisable(true);
     if (type === DrawerType.ADD) {
-      const msgKey = 'create';
-      message.loading({ content: '正在创建云资源，可能需要等待几分钟...', key: msgKey, duration: 60 });
+      const loading = message.loading('正在创建云资源，可能需要等待一会...', 0);
       post(Urls.ApplyResource, { ...values, resource_type: cloudType }).then((data) => {
         const res = data as ResponseData;
+        loading();
         if (res.code === 0) {
-          console.log(res);
           this.setState({
             current: 0,
           });
-          message.success({ content: res.msg, key: msgKey });
+          message.success(res.msg);
           setCreateDrawerVisible(false);
         } else {
-          message.error({ content: res.msg, key: msgKey });
+          message.error(res.msg);
           this.setSubmitBtnDisable(false);
         }
       })
     } else {
-      const msgKey = 'update';
-      message.loading({ content: '正在升级云资源，可能需要等待几分钟...', key: msgKey, duration: 60 });
+      const loading = message.loading('正在升级云资源，可能需要一会...', 0);
       post(Urls.UpdateInstanceInfo, { modified_result: values, resource_type: cloudType, instance_key: instanceKey }).then((data) => {
         const res = data as ResponseData;
+        loading();
         if (res.code === 0) {
           this.setState({
             current: 0,
           });
-          message.success({ content: res.msg, key: msgKey });
+          message.success(res.msg);
           setCreateDrawerVisible(false);
         } else {
-          message.error({ content: res.msg, key: msgKey });
+          message.error(res.msg);
           this.setSubmitBtnDisable(false);
         }
       })

@@ -69,14 +69,14 @@ export class InstanceBox extends React.Component<InstanceBoxProps, InstanceBoxSt
   destroyInstance = () => {
     const { instanceId, cloudType } = this.props;
     this.setSubmitBtnDisable(true);
-    const msgKey = 'destroy';
-    message.loading({ content: '正在销毁资源...', key: msgKey, duration: 10 });
+    const loading = message.loading('正在销毁资源...', 0);
     post(Urls.DestroyResource, { resource_type: cloudType, instance_id: instanceId }).then(data => {
+      loading();
       const res = data as ResponseData;
       if (res.code === 0) {
-        message.success({ content: res.msg, key: msgKey });
+        message.success(res.msg);
       } else {
-        message.error({ content: res.msg, key: msgKey });
+        message.error(res.msg);
       }
       this.setDialogVisible(false);
       this.setSubmitBtnDisable(false);
