@@ -2,7 +2,7 @@ import React from 'react';
 import { Layout, Menu } from 'antd';
 import { MailOutlined, AppstoreOutlined, SettingOutlined } from '@ant-design/icons';
 import VerticalMenu from '../components/vertical_menu';
-import { CloudType, MenuSubItemType } from '../common/enum';
+import { CloudType, MenuSubItemType, ResourceType } from '../common/enum';
 import { useNavigate } from 'react-router-dom';
 import './layout.css';
 import RouterView from '../router/content';
@@ -17,13 +17,7 @@ export function PageLayout(props: PageLayoutProps) {
       label: MenuSubItemType.Other,
       options: [{
         key: `${type}_vpc`,
-        label: 'VPC',
-      }, {
-        key: `${type}_subnet`,
-        label: '子网',
-      }, {
-        key: `${type}_routetable`,
-        label: '路由表',
+        label: 'VPC资源组',
       }]
     }, {
       key: `${type}_${MenuSubItemType.Instance}`,
@@ -41,7 +35,9 @@ export function PageLayout(props: PageLayoutProps) {
     const cloudType = arr[0] as CloudType;
     navigate(`/${arr[1]}/${cloudType}`);
     // setCloudType(cloudType);
-    return cloudType;
+    let resourceType = ResourceType.Instance;
+    if (arr[1] !== ResourceType.Instance) resourceType = ResourceType.VPCGroup;
+    return { cloudType, resourceType };
   }
 
   const { Header, Content, Sider } = Layout;
@@ -62,23 +58,8 @@ export function PageLayout(props: PageLayoutProps) {
     <>
       <Layout>
         <Header className="header">
-          <div className="logo" />
           {/* <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['2']} items={items1} /> */}
-          <Menu mode="horizontal" defaultSelectedKeys={['mail']} theme="dark">
-            <Menu.Item key="mail" icon={<MailOutlined />}>
-              Navigation One
-            </Menu.Item>
-            <Menu.SubMenu key="SubMenu" title="Navigation Three - Submenu" icon={<SettingOutlined />}>
-              <Menu.ItemGroup title="Item 1">
-                <Menu.Item key="app" icon={<AppstoreOutlined />}>
-                  Navigation Two
-                </Menu.Item>
-                <Menu.Item key="disabled" disabled>
-                  Navigation Three
-                </Menu.Item>
-              </Menu.ItemGroup>
-            </Menu.SubMenu>
-          </Menu>
+          <h1 className='h1-font'>多云资源生命周期管理系统</h1>
         </Header>
         <Layout>
           <Sider width={256} className="site-layout-background">
@@ -93,7 +74,7 @@ export function PageLayout(props: PageLayoutProps) {
             <Content
               className="site-layout-background"
             >
-              <RouterView/>
+              <RouterView />
             </Content>
           </Layout>
         </Layout>

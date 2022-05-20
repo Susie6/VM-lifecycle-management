@@ -2,9 +2,9 @@ import React from 'react';
 import { Menu } from 'antd';
 import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
-import { CloudType } from '../common/enum';
-import { updateCloudTypeAction } from '../store/action';
-import { store } from '../store/store';
+import { CloudType, ResourceType } from '../common/enum';
+import { updateCloudTypeAction, updateResourceTypeAction, updateInstanceListAction } from '../store/action';
+import { InstanceBoxInfo } from './instance_box';
 
 interface MenuOption {
   key: string; // 导航值
@@ -25,11 +25,13 @@ interface VerticalMenuProps {
   selectedKey: string;
   openKey: string;
   menuItems: MenuItem[];
-  handleMenuClick: (e: any) => CloudType;
+  handleMenuClick: (e: any) => { cloudType: CloudType, resourceType: ResourceType };
 };
 
 interface VerticalMenuReduxProps {
   updateCloudType: (type: CloudType) => void;
+  updateResourceType: (resourceType: ResourceType) => void;
+  updateInstanceList: (list: InstanceBoxInfo[] | null) => void;
 }
 
 type VerticalMenuAllProps = VerticalMenuProps & VerticalMenuReduxProps;
@@ -46,10 +48,11 @@ class VerticalMenu extends React.Component<VerticalMenuAllProps, VerticalMenuSta
   }
 
   handleClick = (e: any) => {
-    const { handleMenuClick, updateCloudType } = this.props;
-    const cloudType = handleMenuClick(e);
+    const { handleMenuClick, updateCloudType, updateResourceType, updateInstanceList } = this.props;
+    const { cloudType, resourceType } = handleMenuClick(e);
     updateCloudType(cloudType);
-    console.log(store.getState());
+    updateResourceType(resourceType);
+    updateInstanceList(null);
   }
 
   // onOpenChange = (openKeys: string[]) => {
@@ -101,6 +104,12 @@ const mapDispatchToProps = (dispatch: Dispatch) => {
   return {
     updateCloudType: (cloudType: CloudType) => {
       dispatch(updateCloudTypeAction(cloudType));
+    },
+    updateResourceType: (resourceType: ResourceType) => {
+      dispatch(updateResourceTypeAction(resourceType));
+    },
+    updateInstanceList: (list: InstanceBoxInfo[] | null) => {
+      dispatch(updateInstanceListAction(list))
     }
   }
 }

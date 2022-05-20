@@ -4,9 +4,14 @@ export enum CloudType {
   HUAWEI = 'huawei',
 }
 
+export enum ResourceType {
+  VPCGroup = 'vpc',
+  Instance = 'instance',
+}
+
 export enum MenuSubItemType {
   Other = '其他资源',
-  Instance = '虚拟机',
+  Instance = '虚拟机资源',
 }
 
 export enum InstanceStatus {
@@ -43,6 +48,18 @@ export const StatsuText = {
   [InstanceStatus.StoppedX]: '已停止',
   [InstanceStatus.Terminated]: '已终止',
   [InstanceStatus.TerminatedX]: '已终止',
+}
+
+export enum VPCStatus {
+  Available = 'Available',
+  Active = 'ACTIVE',
+  OK = 'OK'
+}
+
+export const VPCStatusText = {
+  [VPCStatus.Available]: 'Available',
+  [VPCStatus.Active]: 'Available',
+  [VPCStatus.OK]: 'Available',
 }
 
 export enum AwsRegion {

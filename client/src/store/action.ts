@@ -1,10 +1,19 @@
-import { CloudType } from "../common/enum";
+import { CloudType, ResourceType } from "../common/enum";
 import { ActionType } from "./action_type";
 import { InstanceBoxInfo } from '../components/instance_box';
 
 export function updateCloudTypeAction(type: CloudType) {
   return {
     type: ActionType.UpdateCloudType,
+    payload: {
+      newState: type,
+    }
+  }
+}
+
+export function updateResourceTypeAction(type: ResourceType) {
+  return {
+    type: ActionType.UpdateResourceType,
     payload: {
       newState: type,
     }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { CloudType, AwsRegion, DrawerType, AliRegion, HuaweiRegion, InstanceStatus } from '../common/enum';
+import { message, Spin } from 'antd';
 import { NumberBox } from '../components/number_box';
 import { InstanceBox, InstanceBoxInfo } from '../components/instance_box';
 import { Toolbar } from '../components/toolbar';
@@ -28,6 +29,7 @@ interface InstanceViewProps {
 interface InstanceViewState {
   isAddMode: boolean; // 是创建还是修改
   cloudType: CloudType;
+  loading: boolean;
 }
 class InstanceView extends React.Component<InstanceViewProps, InstanceViewState> {
   public region: AwsRegion | AliRegion | HuaweiRegion | null;
@@ -39,6 +41,7 @@ class InstanceView extends React.Component<InstanceViewProps, InstanceViewState>
     this.state = {
       isAddMode: true,
       cloudType: props.cloudType,
+      loading: true,
     }
     this.region = null;
     this.selectedInstanceId = null;
@@ -49,6 +52,7 @@ class InstanceView extends React.Component<InstanceViewProps, InstanceViewState>
     if (this.state.cloudType !== nextProps.cloudType) {
       this.setState({
         cloudType: nextProps.cloudType,
+        loading: true,
       }, () => {
         this.setInstanceInfo();
       });
@@ -212,12 +216,17 @@ class InstanceView extends React.Component<InstanceViewProps, InstanceViewState>
             updateInstanceList(null);
           }
         }
+      } else {
+        message.error(res.msg);
       }
+      this.setState({
+        loading: false,
+      })
     });
   }
 
   render() {
-    const { isAddMode, cloudType } = this.state;
+    const { isAddMode, cloudType, loading } = this.state;
     const { instanceList, setLookupDrawerVisible } = this.props;
     const boxes = this.getNumberBoxes();
     return (
@@ -228,23 +237,25 @@ class InstanceView extends React.Component<InstanceViewProps, InstanceViewState>
         <div className='instance-resource--toolbar'>
           <Toolbar onAddInstance={this.handleAddInstanceClick}></Toolbar>
         </div>
-        <div className='instance-resource--details'>
-          {instanceList ? instanceList.map(item => {
-            return <InstanceBox
-              instanceKey={item.instanceKey}
-              instanceId={item.instanceId}
-              instanceName={item.instanceName}
-              instanceType={item.instanceType}
-              region={item.region}
-              publicIp={item.publicIp}
-              status={item.status}
-              image={item.image}
-              cloudType={cloudType}
-              onEditClick={this.handleEditInstanceClick}
-              onSearchClick={this.handleSearchInstanceClick}
-            />
-          }) : <EmptyView description='暂无已创建资源' />}
-        </div>
+        <Spin size='large' spinning={loading} tip='加载中……'>
+          <div className='instance-resource--details'>
+            {instanceList ? instanceList.map(item => {
+              return <InstanceBox
+                instanceKey={item.instanceKey}
+                instanceId={item.instanceId}
+                instanceName={item.instanceName}
+                instanceType={item.instanceType}
+                region={item.region}
+                publicIp={item.publicIp}
+                status={item.status}
+                image={item.image}
+                cloudType={cloudType}
+                onEditClick={this.handleEditInstanceClick}
+                onSearchClick={this.handleSearchInstanceClick}
+              />
+            }) : <EmptyView description='暂无已创建资源' />}
+          </div>
+        </Spin>
         <DrawerView
           cloudType={cloudType}
           type={isAddMode ? DrawerType.ADD : DrawerType.EDIT}

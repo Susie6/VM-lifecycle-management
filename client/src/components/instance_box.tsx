@@ -28,18 +28,6 @@ interface InstanceBoxState {
   disableSubmit: boolean;
 }
 
-function getManagementBtns() {
-  return (
-    <div className='instance-btn-group'>
-      <Button type="link" size='small'>启动</Button>
-      <Divider type="vertical" />
-      <Button type="link" size='small'>重启</Button>
-      <Divider type="vertical" />
-      <Button type="link" size='small'>停止</Button>
-    </div>
-  );
-}
-
 export class InstanceBox extends React.Component<InstanceBoxProps, InstanceBoxState> {
 
   constructor(props: InstanceBoxProps) {
@@ -83,13 +71,26 @@ export class InstanceBox extends React.Component<InstanceBoxProps, InstanceBoxSt
     });
   }
 
+  getManagementBtns() {
+    const { instanceId, instanceKey, onEditClick, onSearchClick } = this.props;
+    return (
+      <div className='instance-box-btns'>
+      <Button type="link" size='small' className='instance-box-btn' onClick={this.onDestroyClick}>销毁实例</Button>
+      <Divider type="vertical" />
+      <Button type="link" size='small' className='instance-box-btn' onClick={() => onEditClick(instanceId, instanceKey)}>修改实例信息</Button>
+      <Divider type="vertical" />
+      <Button type="link" size='small' className='instance-box-btn' onClick={() => onSearchClick(instanceId, instanceKey)}>查看实例详情</Button>
+    </div>
+    );
+  }
+
   render() {
     const { instanceId, instanceName, region, publicIp, status, instanceType, image, instanceKey, onEditClick, onSearchClick } = this.props;
     const { dialogVisible, disableSubmit } = this.state;
     return (
       <>
         <div className='instance-box'>
-          <Card title={instanceName} extra={getManagementBtns()}>
+          <Card title={instanceName} extra={this.getManagementBtns()}>
             <Descriptions size='small' bordered>
               <Descriptions.Item label='实例ID'>{instanceId}</Descriptions.Item>
               <Descriptions.Item label='地域'>{region}</Descriptions.Item>
@@ -100,11 +101,6 @@ export class InstanceBox extends React.Component<InstanceBoxProps, InstanceBoxSt
                 <Badge status={StatusMap[status]} text={status} />
               </Descriptions.Item>
             </Descriptions>
-            <div className='instance-box-btns'>
-              <Button type="primary" className='instance-box-btn' onClick={this.onDestroyClick}>销毁实例</Button>
-              <Button type="primary" className='instance-box-btn' onClick={() => onEditClick(instanceId, instanceKey)}>修改实例信息</Button>
-              <Button type="primary" className='instance-box-btn' onClick={() => onSearchClick(instanceId, instanceKey)}>查看实例详情</Button>
-            </div>
           </Card>
         </div>
         <Dialog visible={dialogVisible} disableSubmit={disableSubmit} title={'销毁实例'} content={`是否销毁实例 ${instanceId}?`} onConfirm={this.destroyInstance} onClose={() => this.setDialogVisible(false)} />

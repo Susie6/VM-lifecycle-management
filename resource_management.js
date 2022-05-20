@@ -584,7 +584,7 @@ app.post('/vpcGroup', async function (request, response) {
     let result = null;
     const group = json_data.values.root_module ? json_data.values.root_module.child_modules.filter(item => item.address.includes(`${resource_type}_vpc`)) : null;
     if (group) {
-      result = getVPCGroupInfo(group);
+      result = getVPCGroupInfo(resource_type, group[0].resources);
     }
     res = {
       code,
@@ -616,7 +616,7 @@ const VPC_GROUP_RESOURCE = {
 }
 
 function getVPCGroupInfo(resource_type, group) {
-  let result = null;
+  let result = {};
   if (resource_type === RESOURCE_TYPE.AWS) {
     group.forEach(item => {
       if (item.type.includes(VPC_GROUP_RESOURCE.SEC_GROUP)) {
@@ -640,24 +640,24 @@ function getVPCGroupInfo(resource_type, group) {
         result[VPC_GROUP_RESOURCE.SUBNET] = {};
         result[VPC_GROUP_RESOURCE.SUBNET].id = item.values.id;
         result[VPC_GROUP_RESOURCE.SUBNET].availability_zone = item.values.availability_zone;
-        result[VPC_GROUP_RESOURCE.SUBNET].cidr_blocks = item.values.cidr_blocks;
+        result[VPC_GROUP_RESOURCE.SUBNET].cidr_blocks = item.values.cidr_block;
         result[VPC_GROUP_RESOURCE.SUBNET].name = item.values.tags.Name;
         result[VPC_GROUP_RESOURCE.SUBNET].vpc_id = item.values.vpc_id;
       } else if (item.type.includes(VPC_GROUP_RESOURCE.VPC)) {
         result[VPC_GROUP_RESOURCE.VPC] = {};
         result[VPC_GROUP_RESOURCE.VPC].id = item.values.id;
         result[VPC_GROUP_RESOURCE.VPC].name = item.values.tags.Name;
-        result[VPC_GROUP_RESOURCE.VPC].cidr_blocks = item.values.cidr_blocks;
+        result[VPC_GROUP_RESOURCE.VPC].cidr_blocks = item.values.cidr_block;
       }
     })
   } else if (resource_type === RESOURCE_TYPE.ALI) {
     group.forEach(item => {
-      if (item.type === `${resource_type}_${VPC_GROUP_RESOURCE.SEC_GROUP}`) {
+      if (item.type === `${resource_type}cloud_${VPC_GROUP_RESOURCE.SEC_GROUP}`) {
         result[VPC_GROUP_RESOURCE.SEC_GROUP] = {};
         result[VPC_GROUP_RESOURCE.SEC_GROUP].id = item.values.id;
         result[VPC_GROUP_RESOURCE.SEC_GROUP].name = item.values.name;
         result[VPC_GROUP_RESOURCE.SEC_GROUP].vpc_id = item.values.vpc_id;
-      } else if (item.type === `${resource_type}_${VPC_GROUP_RESOURCE.SEC_GROUP_RULE}`) {
+      } else if (item.type === `${resource_type}cloud_${VPC_GROUP_RESOURCE.SEC_GROUP_RULE}`) {
         result[VPC_GROUP_RESOURCE.SEC_GROUP_RULE] = {};
         result[VPC_GROUP_RESOURCE.SEC_GROUP_RULE].id = item.values.id;
         result[VPC_GROUP_RESOURCE.SEC_GROUP_RULE].cidr_ip = item.values.cidr_ip;
@@ -666,14 +666,14 @@ function getVPCGroupInfo(resource_type, group) {
         result[VPC_GROUP_RESOURCE.SEC_GROUP_RULE].port_range = item.values.port_range;
         result[VPC_GROUP_RESOURCE.SEC_GROUP_RULE].security_group_id = item.values.security_group_id;
         result[VPC_GROUP_RESOURCE.SEC_GROUP_RULE].type = item.values.type;
-      } else if (item.type === `${resource_type}_${VPC_GROUP_RESOURCE.VPC}`) {
+      } else if (item.type === `${resource_type}cloud_${VPC_GROUP_RESOURCE.VPC}`) {
         result[VPC_GROUP_RESOURCE.VPC] = {};
         result[VPC_GROUP_RESOURCE.VPC].id = item.values.id;
         result[VPC_GROUP_RESOURCE.VPC].name = item.values.name;
         result[VPC_GROUP_RESOURCE.VPC].cidr_block = item.values.cidr_block;
         result[VPC_GROUP_RESOURCE.VPC].status = item.values.status;
 
-      } else if (item.type === `${resource_type}_${VPC_GROUP_RESOURCE.VSWITCH}`) {
+      } else if (item.type === `${resource_type}cloud_${VPC_GROUP_RESOURCE.VSWITCH}`) {
         result[VPC_GROUP_RESOURCE.VSWITCH] = {};
         result[VPC_GROUP_RESOURCE.VSWITCH].id = item.values.id;
         result[VPC_GROUP_RESOURCE.VSWITCH].name = item.values.name;
@@ -683,9 +683,14 @@ function getVPCGroupInfo(resource_type, group) {
         result[VPC_GROUP_RESOURCE.VSWITCH].status = item.values.status;
       }
     });
+    if (result[VPC_GROUP_RESOURCE.SEC_GROUP] !== undefined) {
+      result[VPC_GROUP_RESOURCE.SEC_GROUP].rules = {};
+      result[VPC_GROUP_RESOURCE.SEC_GROUP].rules = result[VPC_GROUP_RESOURCE.SEC_GROUP_RULE];
+      delete result[VPC_GROUP_RESOURCE.SEC_GROUP_RULE];
+    }
   } else if (resource_type === RESOURCE_TYPE.HUAWEI) {
     group.forEach(item => {
-      if (item.type === HUAWEI_SUBNET && item.address.includes('data')) {
+      if (item.type === VPC_GROUP_RESOURCE.HUAWEI_SUBNET && item.address.includes('data')) {
         result[VPC_GROUP_RESOURCE.SUBNET] = {};
         result[VPC_GROUP_RESOURCE.SUBNET].subnet_id = item.values.subnet_id;
         result[VPC_GROUP_RESOURCE.SUBNET].region = item.values.region;
@@ -695,7 +700,7 @@ function getVPCGroupInfo(resource_type, group) {
         result[VPC_GROUP_RESOURCE.SUBNET].vpc_id = item.values.vpc_id;
         result[VPC_GROUP_RESOURCE.SUBNET].gateway_ip = item.values.gateway_ip;
         result[VPC_GROUP_RESOURCE.SUBNET].status = item.values.status;
-      } else if (item.type === HUAWEI_SEC_GROUP) {
+      } else if (item.type === VPC_GROUP_RESOURCE.HUAWEI_SEC_GROUP) {
         result[VPC_GROUP_RESOURCE.SEC_GROUP] = {};
         result[VPC_GROUP_RESOURCE.SEC_GROUP].id = item.values.id;
         result[VPC_GROUP_RESOURCE.SEC_GROUP].name = item.values.name;
@@ -709,7 +714,8 @@ function getVPCGroupInfo(resource_type, group) {
           ports: item.values.rules[0].ports,
           protocol: item.values.rules[0].protocol,
         };
-      } else if (item.type === HUAWEI_VPC) {
+        console.log(item.values)
+      } else if (item.type === VPC_GROUP_RESOURCE.HUAWEI_VPC) {
         result[VPC_GROUP_RESOURCE.VPC] = {};
         result[VPC_GROUP_RESOURCE.VPC].id = item.values.id;
         result[VPC_GROUP_RESOURCE.VPC].cidr = item.values.cidr;

@@ -159,7 +159,7 @@ class DetailsView extends React.Component<DetailsProps, DetailsState> {
               label: '运行状态',
               value: <Badge status={StatusMap[info.status as InstanceStatus]} text={StatsuText[info.status as InstanceStatus]} />,
             }, {
-              label: '子网ID',
+              label: 'vSwitch ID',
               value: info.subnet_id,
             }, {
               label: '安全组ID',

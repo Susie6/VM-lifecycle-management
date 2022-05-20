@@ -1,4 +1,4 @@
-import { InstanceStatus, AwsInstanceType, AwsRegion, AliRegion, HuaweiRegion, HuaweiInstanceType, HuaweiImageName, HuaweiSystemDiskType, HuaweiDataDiskType, DiskCategory, AliInstanceType } from './enum';
+import { InstanceStatus, AwsInstanceType, AwsRegion, AliRegion, HuaweiRegion, HuaweiInstanceType, HuaweiImageName, HuaweiSystemDiskType, HuaweiDataDiskType, DiskCategory, AliInstanceType, VPCStatus } from './enum';
 export interface BoxInfo {
   title: string;
   count: number;
@@ -330,4 +330,104 @@ export interface HuaweiForm extends FormValue {
   data_disk_type: string;
   data_disk_size: number;
   password: string;
+}
+
+export interface AWSVPCInfo {
+  id: string;
+  name: string;
+  cidr_blocks: string;
+}
+
+export interface AWSSubnetInfo {
+  id: string;
+  name: string;
+  cidr_blocks: string;
+  availability_zone: string;
+  vpc_id: string;
+}
+
+export interface AWSSecGroupInfo {
+  id: string;
+  name: string;
+  vpc_id: string;
+  ingress: AWSSecGroupRule;
+  egress: AWSSecGroupRule;
+}
+
+export interface AWSSecGroupRule {
+  cidr_blocks: string;
+  protocol: string;
+  from_port: string;
+  to_port: string;
+}
+
+export interface AliVPCInfo {
+  id: string;
+  name: string;
+  cidr_block: string;
+  // status: VPCStatus;
+  status: string;
+}
+
+export interface AliVswitchInfo {
+  id: string;
+  name: string;
+  cidr_block: string;
+  availability_zone: string;
+  vpc_id: string;
+  // status: VPCStatus;
+  status: string;
+}
+
+export interface AliSecGroupInfo {
+  id: string;
+  name: string;
+  vpc_id: string;
+  rule: AliSecGroupRule;
+}
+
+export interface AliSecGroupRule {
+  id: string;
+  cidr_ip: string;
+  ip_protocol: string;
+  policy: string;
+  port_range: string;
+  security_group_id: string;
+  type: string;
+}
+
+export interface HuaweiVPCInfo {
+  id: string;
+  name: string;
+  cidr: string;
+  region: string;
+  status: string;
+}
+
+export interface HuaweiSubnetInfo {
+  subnet_id: string;
+  name: string;
+  region: string;
+  availability_zone: string;
+  cidr: string;
+  vpc_id: string;
+  gateway_ip: string;
+  status: string;
+}
+
+export interface HuaweiSecGroupInfo {
+  id: string;
+  name: string;
+  region: string;
+  vpc_id: string;
+  rule: HuaweiSecGroupRule;
+}
+
+export interface HuaweiSecGroupRule {
+  direction: string;
+  ethertype: string;
+  port_range_max: string;
+  port_range_min: string;
+  ports: string;
+  protocol: string;
 }

@@ -8,6 +8,11 @@ export const reducer = (state = initState, action: IAction<any>) => {
         ...state,
         cloudType: action.payload.newState,
       };
+    case ActionType.UpdateResourceType:
+      return {
+        ...state,
+        resourceType: action.payload.newState,
+      }
     case ActionType.UpdateInstanceList:
       return {
         ...state,
