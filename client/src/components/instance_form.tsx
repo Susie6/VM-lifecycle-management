@@ -308,9 +308,38 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
             <Form.Item
               label="实例密码"
               name="password"
-              rules={[{ required: true, message: '请输入实例密码!' }]}
+              rules={[{
+                required: true,
+                message: '请输入实例密码!'
+              }, {
+                max: 26,
+                message: '密码长度最大不能超过26！'
+              }, {
+                min: 8,
+                message: '密码长度最小不能少于8！'
+              }, ({ getFieldValue }) => ({
+                validator(rule, value) {
+                  let sign = 0;
+                  if (value.match(/([a-z])+/)) {
+                    sign++;
+                  }
+                  if (value.match(/([A-Z])+/)) {
+                    sign++;
+                  }
+                  if (value.match(/([0-9])+/)) {
+                    sign++;
+                  }
+                  if (value.match(/[^a-zA-Z0-9]+/)) {
+                    sign++;
+                  }
+                  if (!value || sign === 4) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject('密码必须包含大写字母、小写字母、数字和特殊字符！');
+                },
+              })]}
             >
-              <Input />
+              <Input.Password />
             </Form.Item>
             <Form.Item wrapperCol={{ offset: 5, span: 16 }}>
               <Button onClick={onClickCancel} style={{ marginRight: 8 }} disabled={disableSubmit}>
@@ -500,9 +529,38 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
             <Form.Item
               label="实例密码"
               name="password"
-              rules={[{ required: true, message: '请输入实例密码!' }]}
+              rules={[{
+                required: true,
+                message: '请输入实例密码!'
+              }, {
+                max: 26,
+                message: '密码长度最大不能超过26！'
+              }, {
+                min: 8,
+                message: '密码长度最小不能少于8！'
+              }, ({ getFieldValue }) => ({
+                validator(rule, value) {
+                  let sign = 0;
+                  if (value.match(/([a-z])+/)) {
+                    sign++;
+                  }
+                  if (value.match(/([A-Z])+/)) {
+                    sign++;
+                  }
+                  if (value.match(/([0-9])+/)) {
+                    sign++;
+                  }
+                  if (value.match(/[^a-zA-Z0-9]+/)) {
+                    sign++;
+                  }
+                  if (!value || sign === 4) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject('密码必须包含大写字母、小写字母、数字和特殊字符！');
+                },
+              })]}
             >
-              <Input />
+              <Input.Password />
             </Form.Item>
             <Form.Item wrapperCol={{ offset: 5, span: 16 }}>
               <Button onClick={onClickCancel} style={{ marginRight: 8 }} disabled={disableSubmit}>

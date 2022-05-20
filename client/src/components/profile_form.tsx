@@ -130,7 +130,7 @@ export class ProfileForm extends React.Component<ProfileProps, ProfileState> {
               key="secret_key"
               rules={[{ required: true, message: '请输入 secret_key!' }]}
             >
-              <Input />
+              <Input.Password />
             </Form.Item>
             <Form.Item
               label="Region"
