@@ -10,6 +10,8 @@ import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
 import { GlobalState } from '../store/action_type';
 import { setCreateDrawerVisibleAction } from '../store/action';
+import Base64 from 'crypto-js/enc-base64';
+import Utf8 from 'crypto-js/enc-utf8';
 import './add_or_edit.css';
 
 interface DrawerProps {
@@ -39,13 +41,24 @@ class DrawerView extends React.Component<DrawerProps, DrawerState> {
     this.region = null;
   }
 
+  encode = (str: string) => {
+    const key = Base64.stringify(Utf8.parse(str));
+    return key;
+  }
+
+  decode = (str: string) => {
+    const key = Utf8.stringify(Base64.parse(str));
+    return key;
+  }
+
   submitProfileForm = (values: StaticProfileForm) => {
     const { cloudType } = this.props;
     this.setSubmitBtnDisable(true);
+    const secret_key = this.encode(values.secret_key);
     const postData = {
       resource_type: cloudType,
       access_key: values.access_key,
-      secret_key: values.secret_key,
+      secret_key,
       region: values.region,
     }
     this.region = values.region;

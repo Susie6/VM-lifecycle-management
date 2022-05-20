@@ -5,6 +5,7 @@ import { Dispatch } from 'redux';
 import { CloudType, ResourceType } from '../common/enum';
 import { updateCloudTypeAction, updateResourceTypeAction, updateInstanceListAction } from '../store/action';
 import { InstanceBoxInfo } from './instance_box';
+import { GlobalState } from '../store/action_type';
 
 interface MenuOption {
   key: string; // 导航值
@@ -29,6 +30,8 @@ interface VerticalMenuProps {
 };
 
 interface VerticalMenuReduxProps {
+  cloudType: CloudType;
+  resourceType: ResourceType;
   updateCloudType: (type: CloudType) => void;
   updateResourceType: (resourceType: ResourceType) => void;
   updateInstanceList: (list: InstanceBoxInfo[] | null) => void;
@@ -48,11 +51,13 @@ class VerticalMenu extends React.Component<VerticalMenuAllProps, VerticalMenuSta
   }
 
   handleClick = (e: any) => {
-    const { handleMenuClick, updateCloudType, updateResourceType, updateInstanceList } = this.props;
-    const { cloudType, resourceType } = handleMenuClick(e);
-    updateCloudType(cloudType);
-    updateResourceType(resourceType);
-    updateInstanceList(null);
+    const { cloudType, resourceType, handleMenuClick, updateCloudType, updateResourceType, updateInstanceList } = this.props;
+    const { cloudType: newCloudType, resourceType: newResourceType } = handleMenuClick(e);
+    if (cloudType !== newCloudType || resourceType !== newResourceType) {
+      updateCloudType(newCloudType);
+      updateResourceType(newResourceType);
+      updateInstanceList(null);
+    }
   }
 
   // onOpenChange = (openKeys: string[]) => {
@@ -100,6 +105,11 @@ class VerticalMenu extends React.Component<VerticalMenuAllProps, VerticalMenuSta
   };
 }
 
+const mapStateToProps = (state: GlobalState) => ({
+  cloudType: state.cloudType,
+  resourceType: state.resourceType
+})
+
 const mapDispatchToProps = (dispatch: Dispatch) => {
   return {
     updateCloudType: (cloudType: CloudType) => {
@@ -113,4 +123,4 @@ const mapDispatchToProps = (dispatch: Dispatch) => {
     }
   }
 }
-export default connect(null, mapDispatchToProps)(VerticalMenu);
+export default connect(mapStateToProps, mapDispatchToProps)(VerticalMenu);

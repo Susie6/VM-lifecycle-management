@@ -45,8 +45,7 @@ class RouterView extends React.Component<RouterViewProps> {
     const { cloudType } = this.props;
     return (
       <Routes>
-        <Route path="/" element={<HomePage />}></Route>
-        <Route path="/home" element={<HomePage />}></Route>
+        <Route path="/" element={<InstanceView cloudType={cloudType} />}></Route>
         <Route path="/instance/:cloudType" element={<InstanceView cloudType={cloudType} />}></Route>
         <Route path="/vpc/:cloudType" element={<VPCGroupView cloudType={cloudType} />}></Route>
       </Routes>

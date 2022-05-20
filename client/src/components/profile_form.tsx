@@ -6,6 +6,9 @@ import { FormInstance } from 'antd/lib/form';
 import { post } from '../api/request';
 import { Urls } from '../api/apis';
 import { ResponseData } from '../common/interface';
+import Base64 from 'crypto-js/enc-base64';
+import Utf8 from 'crypto-js/enc-utf8';
+
 interface ProfileProps {
   cloudType: CloudType;
   disableSubmit: boolean;
@@ -36,16 +39,22 @@ export class ProfileForm extends React.Component<ProfileProps, ProfileState> {
     this.fillStaticProfile();
   }
 
-  fillStaticProfile() {
+  decode = (str: string) => {
+    const key = Utf8.stringify(Base64.parse(str));
+    return key;
+  }
+
+  fillStaticProfile = () => {
     const { cloudType } = this.props;
     post(Urls.ShowStaticProfile, { resource_type: cloudType }).then(data => {
       const res = data as ResponseData;
       if (res.code === 0) {
         if (res.result !== null) {
-          const result = res.result as { access_key: string, secret_key: string, region: AwsRegion | AliRegion | HuaweiRegion, resource_type: CloudType }
+          const result = res.result as { access_key: string, secret_key: string, region: AwsRegion | AliRegion | HuaweiRegion, resource_type: CloudType };
+          const secret_key = this.decode(result.secret_key);
           this.onFill({
             access_key: result.access_key,
-            secret_key: result.secret_key,
+            secret_key,
             region: result.region,
           });
         }

@@ -5,6 +5,7 @@ const {
 const fs = require('fs');
 const mysql = require('mysql');
 const bodyParser = require('body-parser');
+const CryptoJS = require("crypto-js");
 
 const db = mysql.createConnection({
   host: 'localhost',
@@ -53,6 +54,18 @@ app.use((req, res, next) => {
   req.method === 'OPTIONS' ? res.status(204).end() : next()
 })
 
+function encode(str) {
+  const wordArray = CryptoJS.enc.Utf8.parse(str);
+  const base64 = CryptoJS.enc.Base64.stringify(wordArray);
+  return base64;
+}
+
+function decode(str) {
+  const parsedWordArray = CryptoJS.enc.Base64.parse(str);
+  const parsedStr = parsedWordArray.toString(CryptoJS.enc.Utf8);
+  return parsedStr;
+}
+
 app.post('/staticProfile', async (request, response) => {
   const {
     resource_type,
@@ -63,12 +76,13 @@ app.post('/staticProfile', async (request, response) => {
   const json_path = `${resource_type}-instance/${variable_file}`;
   const cmd_path = `${resource_type}-instance`;
   const select_sql = `select resource_type,access_key,secret_key,region from UserStaticProfile where resource_type='${resource_type}';`;
-  const insert_sql = `insert into UserStaticProfile (resource_type,access_key,secret_key,region) values ('${resource_type}','${access_key}','${secret_key}','${region}');`;
-  const newData = {
-    access_key,
-    secret_key,
-    region,
-  }
+  const real_secret_key = decode(secret_key);
+  const insert_sql = `insert into UserStaticProfile (resource_type,access_key,secret_key,region) values ('${resource_type}','${access_key}','${real_secret_key}','${region}');`;
+    const newData = {
+      access_key,
+      secret_key: real_secret_key,
+      region,
+    }
   const oldData = await toJson(json_path, newData, resource_type);
   const {
     code,
@@ -97,9 +111,9 @@ app.post('/staticProfile', async (request, response) => {
           }
         })
         response.send(JSON.stringify(res));
-      } else if (result[0].region !== region || result[0].access_key !== access_key || result[0].secret_key !== secret_key) {
+      } else if (result[0].region !== region || result[0].access_key !== access_key || result[0].secret_key !== real_secret_key) {
         // 数据库中有存储，但不一致
-        const update_sql = `update UserStaticProfile set region='${region}',access_key='${access_key}',secret_key='${secret_key}' where resource_type='${resource_type}';`;
+        const update_sql = `update UserStaticProfile set region='${region}',access_key='${access_key}',secret_key='${real_secret_key}' where resource_type='${resource_type}';`;
         db.query(update_sql, function (err, result) {
           if (err) {
             res = {
@@ -388,6 +402,8 @@ app.post('/showStaticProfile', (request, response) => {
         result: null,
       }
     } else {
+      const secret_key = encode(result[0].secret_key);
+      result[0].secret_key = secret_key;
       res = {
         code: 0,
         command_error: null,

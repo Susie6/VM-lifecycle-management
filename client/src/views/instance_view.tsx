@@ -220,7 +220,7 @@ class InstanceView extends React.Component<InstanceViewProps, InstanceViewState>
       }
       this.setState({
         loading: false,
-      })
+      });
     });
   }
 
@@ -229,33 +229,35 @@ class InstanceView extends React.Component<InstanceViewProps, InstanceViewState>
     const { instanceList, setLookupDrawerVisible } = this.props;
     const boxes = this.getNumberBoxes();
     return (
-      <div className='instance-resource'>
-        <div className='instance-resource--overview'>
-          <NumberBox boxes={boxes}></NumberBox>
-        </div>
-        <div className='instance-resource--toolbar'>
-          <Toolbar onAddInstance={this.handleAddInstanceClick}></Toolbar>
-        </div>
-        <Spin size='large' spinning={loading} tip='加载中……'>
-          <div className='instance-resource--details'>
-            {instanceList ? instanceList.map(item => {
-              return <InstanceBox
-                instanceKey={item.instanceKey}
-                instanceId={item.instanceId}
-                instanceName={item.instanceName}
-                instanceType={item.instanceType}
-                region={item.region}
-                publicIp={item.publicIp}
-                status={item.status}
-                image={item.image}
-                cloudType={cloudType}
-                onEditClick={this.handleEditInstanceClick}
-                onSearchClick={this.handleSearchInstanceClick}
-                synchronizeResources={this.setInstanceInfo}
-              />
-            }) : <EmptyView description='暂无已创建资源' />}
+      <>
+        <div className='instance-resource'>
+          <div className='instance-resource--overview'>
+            <NumberBox boxes={boxes}></NumberBox>
           </div>
-        </Spin>
+          <div className='instance-resource--toolbar'>
+            <Toolbar onAddInstance={this.handleAddInstanceClick}></Toolbar>
+          </div>
+          <Spin size='large' spinning={loading} tip='加载中……'>
+            <div className='instance-resource--details'>
+              {instanceList ? instanceList.map(item => {
+                return <InstanceBox
+                  instanceKey={item.instanceKey}
+                  instanceId={item.instanceId}
+                  instanceName={item.instanceName}
+                  instanceType={item.instanceType}
+                  region={item.region}
+                  publicIp={item.publicIp}
+                  status={item.status}
+                  image={item.image}
+                  cloudType={cloudType}
+                  onEditClick={this.handleEditInstanceClick}
+                  onSearchClick={this.handleSearchInstanceClick}
+                  synchronizeResources={this.setInstanceInfo}
+                />
+              }) : <EmptyView description='暂无已创建资源' />}
+            </div>
+          </Spin>
+        </div>
         <DrawerView
           cloudType={cloudType}
           type={isAddMode ? DrawerType.ADD : DrawerType.EDIT}
@@ -271,7 +273,7 @@ class InstanceView extends React.Component<InstanceViewProps, InstanceViewState>
             setLookupDrawerVisible(false);
             this.reset();
           }} />
-      </div>
+      </>
     );
   }
 }

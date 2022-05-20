@@ -22,6 +22,6 @@
   padding-right: 24px;
 }
 
-.ant-spin-show-text {
+.instance-resource > .ant-spin-nested-loading > div > .ant-spin {
   top: 330px;
 }
