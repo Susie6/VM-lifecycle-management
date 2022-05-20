@@ -21,6 +21,7 @@ interface InstanceBoxProps extends InstanceBoxInfo {
   cloudType: CloudType;
   onEditClick: (id: string, instanceKey: string) => void;
   onSearchClick: (id: string, instanceKey: string) => void;
+  synchronizeResources: () => void;
 }
 
 interface InstanceBoxState {
@@ -55,7 +56,7 @@ export class InstanceBox extends React.Component<InstanceBoxProps, InstanceBoxSt
   }
 
   destroyInstance = () => {
-    const { instanceId, cloudType } = this.props;
+    const { instanceId, cloudType, synchronizeResources } = this.props;
     this.setSubmitBtnDisable(true);
     const loading = message.loading('正在销毁资源...', 0);
     post(Urls.DestroyResource, { resource_type: cloudType, instance_id: instanceId }).then(data => {
@@ -63,6 +64,7 @@ export class InstanceBox extends React.Component<InstanceBoxProps, InstanceBoxSt
       const res = data as ResponseData;
       if (res.code === 0) {
         message.success(res.msg);
+        synchronizeResources();
       } else {
         message.error(res.msg);
       }

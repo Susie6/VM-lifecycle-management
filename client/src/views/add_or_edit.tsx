@@ -20,6 +20,7 @@ interface DrawerProps {
   instanceKey?: string | null;
   onClose: () => void;
   setCreateDrawerVisible: (visible: boolean) => void;
+  synchronizeResources: () => void;
 }
 
 interface DrawerState {
@@ -67,7 +68,7 @@ class DrawerView extends React.Component<DrawerProps, DrawerState> {
   }
 
   submitInstanceForm = (values: HuaweiForm | AwsForm | AliForm) => {
-    const { cloudType, type, instanceKey, setCreateDrawerVisible } = this.props;
+    const { cloudType, type, instanceKey, setCreateDrawerVisible, synchronizeResources } = this.props;
     this.setSubmitBtnDisable(true);
     if (type === DrawerType.ADD) {
       const loading = message.loading('正在创建云资源，可能需要等待一会...', 0);
@@ -80,6 +81,7 @@ class DrawerView extends React.Component<DrawerProps, DrawerState> {
           });
           message.success(res.msg);
           setCreateDrawerVisible(false);
+          synchronizeResources();
         } else {
           message.error(res.msg);
           this.setSubmitBtnDisable(false);
@@ -96,6 +98,7 @@ class DrawerView extends React.Component<DrawerProps, DrawerState> {
           });
           message.success(res.msg);
           setCreateDrawerVisible(false);
+          synchronizeResources();
         } else {
           message.error(res.msg);
           this.setSubmitBtnDisable(false);

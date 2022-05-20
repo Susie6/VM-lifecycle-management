@@ -67,7 +67,7 @@ class InstanceView extends React.Component<InstanceViewProps, InstanceViewState>
     this.selectedinstanceKey = null;
   }
 
-  async setInstanceInfo() {
+  setInstanceInfo = async () => {
     const { cloudType } = this.state;
     const region = await this.getRegion();
     if (region !== "None") {
@@ -144,7 +144,7 @@ class InstanceView extends React.Component<InstanceViewProps, InstanceViewState>
     });
   }
 
-  getAllInstance() {
+  getAllInstance = () => {
     const { updateInstanceList } = this.props;
     const { cloudType } = this.state;
     post(Urls.ShowResourceInfo, { resource_type: cloudType }).then(data => {
@@ -173,7 +173,6 @@ class InstanceView extends React.Component<InstanceViewProps, InstanceViewState>
               });
               break;
             case CloudType.ALI:
-              console.log(res.result);
               result = res.result as AliResultItem[];
               result.forEach(item => {
                 if (item) {
@@ -252,6 +251,7 @@ class InstanceView extends React.Component<InstanceViewProps, InstanceViewState>
                 cloudType={cloudType}
                 onEditClick={this.handleEditInstanceClick}
                 onSearchClick={this.handleSearchInstanceClick}
+                synchronizeResources={this.setInstanceInfo}
               />
             }) : <EmptyView description='暂无已创建资源' />}
           </div>
@@ -262,6 +262,7 @@ class InstanceView extends React.Component<InstanceViewProps, InstanceViewState>
           onClose={this.closeDrawer}
           instanceId={this.selectedInstanceId}
           instanceKey={this.selectedinstanceKey}
+          synchronizeResources={this.setInstanceInfo}
         />
         <DetailsView
           cloudType={cloudType}
