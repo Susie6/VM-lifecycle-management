@@ -90,7 +90,6 @@ app.post('/staticProfile', async (request, response) => {
   } = await execute(TERRAFORM_COMMANDS.INIT, cmd_path);
   let res = {};
   if (code === 0) {
-    console.log(cmd_info);
     // 写入数据库
     db.query(select_sql, function (err, result, fields) {
       // 数据库无存储
@@ -198,7 +197,6 @@ app.post('/applyResource', async (request, response) => {
     availability_zone: request.body.availability_zone
   }, resource_type);
   const oldData = await updateResourceInfo(newData, resource_type, OPERATION_TYPE.ADD, key);
-  console.log("finished writing")
   // terraform apply --auto-approve -target 'module.aws_resources[\"l2iufnwg\"].aws_instance.instance'
   // const cmd = `${TERRAFORM_COMMANDS.APPLY} -target "module.${resource_type}_resources[\\"${key}\\"].${resource_type}_instance.instance"`;
   const cmd = TERRAFORM_COMMANDS.APPLY;
@@ -207,7 +205,6 @@ app.post('/applyResource', async (request, response) => {
     cmd_info
   } = await execute(cmd, cmd_path);
   if (code === 0) {
-    console.log(cmd_info);
     const res = {
       code,
       command_error: null,
@@ -215,7 +212,6 @@ app.post('/applyResource', async (request, response) => {
     };
     response.send(JSON.stringify(res));
   } else {
-    console.log(cmd_info);
     const res = {
       code,
       command_error: cmd_info,
@@ -241,13 +237,10 @@ app.post('/destroyResource', async (request, response) => {
   if (search_code === 0) {
     // module.aws_resources[\"instance_a\"].aws_instance.instance
     const instance_key = info.instance_key;
-    console.log("start destroying");
     oldData = await updateResourceInfo(null, resource_type, OPERATION_TYPE.DELETE, instance_key);
-    console.log(oldData);
     // const cmd = `${TERRAFORM_COMMANDS.DESTROY} -target "module.${resource_type}_resources[\\"${instance_key}\\"].${resource_type}_instance.instance" --auto-approve`;
     const cmd = TERRAFORM_COMMANDS.APPLY;
     const result = await execute(cmd, cmd_path);
-    console.log("finish destroying");
     if (result.code === 0) {
       res = {
         code: 0,
@@ -448,7 +441,6 @@ function execute(cmd, working_path) {
       cwd: working_path,
       maxBuffer: 2000 * 1024,
     }, function (error, stdout, stderr) {
-      console.log('here');
       console.log(error);
       console.log(stdout);
       console.log(stderr);
@@ -497,7 +489,6 @@ async function toJson(file, newData, resource_type) {
   });
   const json_data = JSON.stringify(data, null, "\t");
   fs.writeFileSync(file, json_data);
-  console.log("写入文件")
   return oldData;
 }
 
@@ -505,7 +496,6 @@ function revertJson(oldData, resource_type) {
   const file = `${resource_type}-instance/${variable_file}`;
   const json_data = JSON.stringify(oldData, null, "\t");
   fs.writeFileSync(file, json_data);
-  console.log("还原文件")
 }
 
 async function updateResourceInfo(newData, resource_type, operation_type, instance_key) {
@@ -730,7 +720,6 @@ function getVPCGroupInfo(resource_type, group) {
           ports: item.values.rules[0].ports,
           protocol: item.values.rules[0].protocol,
         };
-        console.log(item.values)
       } else if (item.type === VPC_GROUP_RESOURCE.HUAWEI_VPC) {
         result[VPC_GROUP_RESOURCE.VPC] = {};
         result[VPC_GROUP_RESOURCE.VPC].id = item.values.id;

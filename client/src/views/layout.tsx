@@ -1,6 +1,5 @@
 import React from 'react';
-import { Layout, Menu } from 'antd';
-import { MailOutlined, AppstoreOutlined, SettingOutlined } from '@ant-design/icons';
+import { Layout } from 'antd';
 import VerticalMenu from '../components/vertical_menu';
 import { CloudType, MenuSubItemType, ResourceType } from '../common/enum';
 import { useNavigate } from 'react-router-dom';

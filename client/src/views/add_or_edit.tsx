@@ -97,8 +97,8 @@ class DrawerView extends React.Component<DrawerProps, DrawerState> {
           synchronizeResources();
         } else {
           message.error(res.msg);
-          this.setSubmitBtnDisable(false);
         }
+        this.setSubmitBtnDisable(false);
       })
     } else {
       const loading = message.loading('正在升级云资源，可能需要一会...', 0);

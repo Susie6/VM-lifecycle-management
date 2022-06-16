@@ -185,8 +185,9 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
   }
 
   renderAliForm() {
-    const { onClickCancel } = this.props;
+    const { drawerType, onClickCancel } = this.props;
     const { disableSubmit, loading } = this.state;
+    const disableChange = drawerType === DrawerType.EDIT ? true : false;
     return (
       <div>
         <Spin spinning={loading} tip={'加载中……'}>
@@ -225,20 +226,20 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
             >
               <Select
                 placeholder="请选择可用区"
-                // onChange={this.onGenderChange}
+                disabled={disableChange}
                 allowClear
               >
                 {this.renderAvailableZoneOptions()}
               </Select>
             </Form.Item>
             <Form.Item
-              label="system_disk_category"
+              label="系统盘类别"
               name="system_disk_category"
               rules={[{ required: true, message: '请输入 system_disk_category!' }]}
             >
               <Select
                 placeholder="请选择system_disk_category"
-                // onChange={this.onGenderChange}
+                disabled={disableChange}
                 allowClear
               >
                 {Object.values(DiskCategory).map(op =>
@@ -247,35 +248,35 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
               </Select>
             </Form.Item>
             <Form.Item
-              label="system_disk_name"
+              label="系统盘名称"
               name="system_disk_name"
               rules={[{ required: true, message: '请输入system_disk_name!' }]}
             >
               <Input />
             </Form.Item>
             <Form.Item
-              label="system_disk_description"
+              label="系统盘描述"
               name="system_disk_description"
               rules={[{ required: true, message: '请输入system_disk_description!' }]}
             >
               <Input />
             </Form.Item>
             <Form.Item
-              label="system_disk_size"
+              label="系统盘内存大小"
               name="system_disk_size"
-              extra={<p>提示：大小范围在 40 - 1024 之间</p>}
+              extra={<p>提示：大小范围在 40 - 500 之间</p>}
               rules={[{ required: true, message: '请输入system_disk_size!' }]}
             >
-              <InputNumber min={40} max={1024} addonAfter={"G"} />
+              <InputNumber min={40} max={500} addonAfter={"G"} />
             </Form.Item>
             <Form.Item
-              label="data_disk_category"
+              label="数据盘类别"
               name="data_disk_category"
               rules={[{ required: true, message: '请输入 data_disk_category!' }]}
             >
               <Select
                 placeholder="请选择data_disk_category"
-                // onChange={this.onGenderChange}
+                disabled={disableChange}
                 allowClear
               >
                 {Object.values(DiskCategory).map(op =>
@@ -284,26 +285,26 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
               </Select>
             </Form.Item>
             <Form.Item
-              label="data_disk_name"
+              label="数据盘名称"
               name="data_disk_name"
               rules={[{ required: true, message: '请输入data_disk_name!' }]}
             >
-              <Input />
+              <Input disabled={disableChange} />
             </Form.Item>
             <Form.Item
-              label="data_disk_description"
+              label="数据盘描述"
               name="data_disk_description"
               rules={[{ required: true, message: '请输入data_disk_description!' }]}
             >
-              <Input />
+              <Input disabled={disableChange}/>
             </Form.Item>
             <Form.Item
-              label="data_disk_size"
+              label="数据盘内存大小"
               name="data_disk_size"
-              extra={<p>提示：大小范围在 40 - 1024 之间</p>}
+              extra={<p>cloud_efficiency：[20, 32768]; cloud_ssd：[20, 32768]; cloud_essd：[20, 32768]; ephemeral_ssd: [5, 800]</p>}
               rules={[{ required: true, message: '请输入data_disk_size!' }]}
             >
-              <InputNumber min={40} max={1024} addonAfter={"G"} />
+              <InputNumber min={20} max={32768} addonAfter={"G"} disabled={disableChange}/>
             </Form.Item>
             <Form.Item
               label="实例密码"
@@ -356,8 +357,9 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
   }
 
   renderAwsForm() {
-    const { onClickCancel } = this.props;
+    const { drawerType, onClickCancel } = this.props;
     const { disableSubmit, loading } = this.state;
+    const disableChange = drawerType === DrawerType.EDIT ? true : false;
     return (
       <div>
         <Spin spinning={loading} tip={'加载中……'}>
@@ -376,7 +378,6 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
             >
               <Select
                 placeholder="请选择实例类型"
-                // onChange={this.onGenderChange}
                 allowClear
               >
                 {this.renderInstanceTypeOptions()}
@@ -396,6 +397,7 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
             >
               <Select
                 placeholder="请选择可用区"
+                disabled={disableChange}
                 allowClear
               >
                 {this.renderAvailableZoneOptions()}
@@ -423,8 +425,9 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
   }
 
   renderHuaweiForm() {
-    const { onClickCancel } = this.props;
+    const { drawerType, onClickCancel } = this.props;
     const { disableSubmit, loading } = this.state;
+    const disableChange = drawerType === DrawerType.EDIT ? true : false;
     return (
       <div>
         <Spin spinning={loading} tip={'加载中……'}>
@@ -463,6 +466,7 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
             >
               <Select
                 placeholder="请选择可用区"
+                disabled={disableChange}
                 allowClear
               >
                 {this.renderAvailableZoneOptions()}
@@ -474,20 +478,21 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
               rules={[{ required: true, message: '请输入image_name!' }]}
             >
               <Select
-                placeholder="请选择可用鏡像"
+                placeholder="请选择可用镜像"
+                disabled={disableChange}
                 allowClear
               >
                 {this.renderHuaweiImageOptions()}
               </Select>
             </Form.Item>
             <Form.Item
-              label="system_disk_type"
+              label="系统盘类别"
               name="system_disk_type"
               rules={[{ required: true, message: '请输入 system_disk_type!' }]}
             >
               <Select
                 placeholder="请选择system_disk_type"
-                // onChange={this.onGenderChange}
+                disabled={disableChange}
                 allowClear
               >
                 {Object.values(HuaweiSystemDiskType).map(op =>
@@ -496,21 +501,21 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
               </Select>
             </Form.Item>
             <Form.Item
-              label="system_disk_size"
+              label="系统盘内存大小"
               name="system_disk_size"
-              extra={<p>提示：大小范围在 40 - 1024 之间</p>}
+              extra={<p>提示：大小范围在 40 - 32768 之间</p>}
               rules={[{ required: true, message: '请输入system_disk_size!' }]}
             >
-              <InputNumber min={40} max={1024} addonAfter={"G"} />
+              <InputNumber min={40} max={32768} addonAfter={"G"} disabled={disableChange}/>
             </Form.Item>
             <Form.Item
-              label="data_disk_type"
+              label="数据盘类别"
               name="data_disk_type"
               rules={[{ required: true, message: '请输入 data_disk_type!' }]}
             >
               <Select
                 placeholder="请选择data_disk_type"
-                // onChange={this.onGenderChange}
+                disabled={disableChange}
                 allowClear
               >
                 {Object.values(HuaweiDataDiskType).map(op =>
@@ -519,12 +524,12 @@ export class InstanceForm extends React.Component<InstanceFormProps, InstanceFor
               </Select>
             </Form.Item>
             <Form.Item
-              label="data_disk_size"
+              label="数据盘内存大小"
               name="data_disk_size"
-              extra={<p>提示：大小范围在 40 - 1024 之间</p>}
+              extra={<p>提示：大小范围在 40 - 32768 之间</p>}
               rules={[{ required: true, message: '请输入data_disk_size!' }]}
             >
-              <InputNumber min={40} max={1024} addonAfter={"G"} />
+              <InputNumber min={40} max={32768} addonAfter={"G"} disabled={disableChange}/>
             </Form.Item>
             <Form.Item
               label="实例密码"
